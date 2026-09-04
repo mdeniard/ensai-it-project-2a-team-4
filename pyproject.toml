@@ -1,0 +1,65 @@
+[project]
+name = "Projet2A_2026"
+version = "0.1.0"
+description = "Teacher's version of the Projet2A 2024"
+authors = [
+    {name = "ClémentValot", email = "clement.valot.pro@gmail.com"},
+]
+dependencies = [
+    "fastapi>=0.141.1",
+    "uvicorn>=0.52.4",
+    "pydantic>=2.13.5",
+    "PyJWT>=2.13.0",
+    "psycopg2-binary>=2.9.12",
+    "python-dotenv>=1.2.3",
+]
+requires-python = "==3.14.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+pythonpath = [ "."] 
+testpaths = [
+    "tests",
+]
+
+
+[tool.pdm]
+distribution = false
+
+
+[tool.pdm.scripts]
+lint = "ruff check"
+format = "ruff format"
+test = "pytest tests --cov=src"
+start = "pdm run __main__.py"
+typecheck = "pyrefly check"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I", "A", "C90", "PERF", "TCH", "TID"]
+
+[tool.pyrefly]
+project-includes = ["src/**/*"]
+project-excludes = ['**/*venv/**\*']
+search_path = [
+    "."
+]
+
+[dependency-groups]
+test = [
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "freezegun>=1.5.5",
+]
+lint = [
+    "ruff>=0.16.6",
+]
+typing = [
+    "types-requests>=2.33.0.20260712",
+    "types-psycopg2>=2.9.21.20260724",
+    "pyrefly>=1.2.0",
+]
