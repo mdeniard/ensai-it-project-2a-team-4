@@ -1,6 +1,6 @@
 # Diagramme d'activité
 
-```mermaid
+``` mermaid
 stateDiagram
     admin : Admin
     adminlogin : Login
@@ -40,22 +40,22 @@ stateDiagram
     adminlogin --> menu_admin
     
     state menu_admin {
-    	[*] --> menu_account
+        [*] --> menu_account
       [*] --> menu_schedule
-    	[*] --> admin_logout
+        [*] --> admin_logout
         admin_logout --> [*]: return to home
     }
 
     customerlogin --> menu_customer
 
     state menu_customer {
-    	[*] --> research
+        [*] --> research
       research --> bymovie
       bymovie --> book
       research --> bydate
       bydate --> book
-    	[*] --> review
-    	[*] --> customer_logout
+        [*] --> review
+        [*] --> customer_logout
         customer_logout --> [*]: return to home
     }
 ```
