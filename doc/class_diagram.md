@@ -4,16 +4,16 @@ title: Movie App
 ---
 classDiagram
     class Movie{
-        +name
-        +date
-        +describtion
-        +duration
+        +name: str
+        +date: 
+        +describtion: str
+        +duration: int
     }
     
     class User{
         <<abstract>>
-        +name
-        +password
+        +name: str
+        +password: str
     }
 
     class Customer {
@@ -24,5 +24,24 @@ classDiagram
 
     User <|-- Customer
     User <|-- Administrator
+
+    class Room{
+        +number_of_place: int
+        +planning
+    }
+
+    class Reservation{
+        +customer: Customer
+        +movie: Movie
+        +schedule
+    }
+
+    class Screening{
+        +movie: Movie
+        +schedule
+        +room: Room
+    }
+
+
 
 ```
