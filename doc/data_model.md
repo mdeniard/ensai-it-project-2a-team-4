@@ -46,6 +46,7 @@ classDiagram
         +start_time: datetime
         +end_time: datetime
         +ticket_price: Decimal
+        +available_places: int
     }
 
     class Reservation {
