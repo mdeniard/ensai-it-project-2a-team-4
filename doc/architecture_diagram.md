@@ -1,31 +1,32 @@
-# Architecture 
+# Architecture
 
-```mermaid
+``` mermaid
 ---
-title: Quick Architecture Overview
+title:
 ---
 graph LR
-    subgraph Users ["Users"]
-        CUST((Customer))
-        ADMIN((Admin))
-    end
+    User((User))
 
     subgraph App ["Python App"]
-        API("API / WebService")
-        SVC("Services / Controllers")
+        CTL("Controllers")
+        SVC("Services")
         DAO("DAO")
-        API <--> SVC <--> DAO
+        MDL("Models")
     end
 
     DB[("Database<br/>(PostgreSQL)")]
 
     subgraph External ["External Services"]
-        MDBAPI["OMDb API"] ~~~ STPAPI["Stripe API"]
+        MDBAPI["TMDb API"]
     end
+    
+    SVC --> MDBAPI
+    User --> CTL
+    CTL --> SVC
+    SVC --> DAO
+    DAO --> DB
 
-    CUST <--> API
-    ADMIN <--> API
-    DAO <--> DB
-    SVC <--> STPAPI
-    SVC <--> MDBAPI
+    MDL <-.- CTL
+    MDL <-.- SVC
+    MDL <-.- DAO
 ```
