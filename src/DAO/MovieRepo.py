@@ -1,5 +1,7 @@
 from typing import Optional
+
 from src.Model.Movie import Movie
+
 from .DBConnector import DBConnector
 
 
@@ -19,7 +21,7 @@ class MovieRepo:
             return None
         return Movie(**raw_movie)
 
-    def get_screening_movie(self) -> Optional[Movie]:
+    def get_screening_movies(self) -> Optional[Movie]:
         raw_movie = self.db_connector.sql_query(
             "SELECT * FROM movie;",
             return_type="one"
