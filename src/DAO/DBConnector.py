@@ -9,7 +9,7 @@ class DBConnector:
     def __init__(self, config=None):
         if config is not None:
             self.host = config["host"]
-            self.port = config["post"]
+            self.port = config["port"]
             self.database = config["database"]
             self.user = config["user"]
             self.password = config["password"]
