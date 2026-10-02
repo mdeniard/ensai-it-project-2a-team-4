@@ -1,13 +1,13 @@
 class Movie:
     def __init__(
-        self, 
-        id: int, 
-        tmdb_id: int, 
-        title: str, 
-        description: str, 
-        duration: int, 
-        released_date: str, 
-        rating: float, 
+        self,
+        id: int,
+        tmdb_id: int,
+        title: str,
+        description: str,
+        duration: int,
+        released_date: str,
+        rating: float,
         poster_url: str
     ):
         self.id = id
