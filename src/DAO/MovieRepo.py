@@ -8,8 +8,8 @@ from .DBConnector import DBConnector
 class MovieRepo:
     db_connector: DBConnector
 
-    def __init__(self, db_connector: DBConnector) -> None:
-        self.db_connector = db_connector
+    def __init__(self, db_connector: Optional[DBConnector] = None) -> None:
+        self.db_connector = db_connector or DBConnector()
 
     def get_by_id(self, movie_id: int) -> Optional[Movie]:
         raw_movie = self.db_connector.sql_query(
@@ -22,13 +22,14 @@ class MovieRepo:
         return Movie(**raw_movie)
 
     def get_screening_movies(self) -> Optional[Movie]:
-        raw_movie = self.db_connector.sql_query(
+        raw_movies = self.db_connector.sql_query(
             "SELECT * FROM movie;",
-            return_type="one"
+            return_type="all"
         )
-        if raw_movie is None:
-            return None
-        return Movie(**raw_movie)
+        if not raw_movies:
+                    return []
+
+        return [Movie(**movie_data) for movie_data in raw_movies]
 
     def create(self, movie) -> Movie:
         raw_created_movie = self.db_connector.sql_query(
