@@ -1,6 +1,6 @@
 from typing import Optional
 
-from src.Model.Movie import Movie
+from src.Business_object.Movie import Movie
 
 from .DBConnector import DBConnector
 
@@ -11,10 +11,10 @@ class MovieRepo:
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:
         self.db_connector = db_connector or DBConnector()
 
-    def get_by_id(self, movie_id: int) -> Optional[Movie]:
+    def get_by_id(self, tmdb_id: int) -> Optional[Movie]:
         raw_movie = self.db_connector.sql_query(
-            "SELECT * FROM movie WHERE id = %s;",
-            [movie_id],
+            "SELECT * FROM movie WHERE tmdb_id = %s;",
+            [tmdb_id],
             "one"
         )
         if raw_movie is None:
@@ -52,9 +52,6 @@ class MovieRepo:
         return Movie(**raw_created_movie)
 
     def update(self, movie: Movie) -> Optional[Movie]:
-        if  self.get_by_id(movie.id) is None:
-            raise ValueError("Le film n'existe pas.")
-
         raw_updated_movie = self.db_connector.sql_query(
             """
             UPDATE movie

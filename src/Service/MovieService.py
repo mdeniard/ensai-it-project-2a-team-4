@@ -1,7 +1,7 @@
 from typing import Optional
 
 from src.DAO.MovieRepo import MovieRepo
-from src.Model.Movie import Movie
+from src.Business_object.Movie import Movie
 
 
 class MovieService:
@@ -18,14 +18,14 @@ class MovieService:
         """
         return self.movie_repo.get_screening_movies()
 
-    def get_by_id(self, movie_id: int) -> Movie:
+    def get_by_id(self, tmdb_id: int) -> Movie:
         """Find a specific movie by its id.
         Args:
             movie_db (int): The unique identifier of the movie.
         Returns:
             Movie object if found, otherwise None.
         """
-        return self.movie_repo.get_by_id(movie_id)
+        return self.movie_repo.get_by_id(tmdb_id)
 
     def create_movie(self, movie):
         """Create a movie
@@ -34,12 +34,12 @@ class MovieService:
         """
         return self.movie_repo.create(movie)
 
-    def update_movie(self, movie_data):
+    def update_movie(self, movie):
         """Update a movie
         Args:
             movie : new data concerning the movie
         """
-        return self.movie_repo.update(movie_data)
+        return self.movie_repo.update(movie)
 
     def delete_movie(self, movie_id):
         """Delete a movie
