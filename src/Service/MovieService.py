@@ -1,15 +1,22 @@
 from typing import Optional
 
-from src.DAO.MovieRepo import MovieRepo
 from src.Business_object.Movie import Movie
+from src.DAO.MovieDBConnector import MovieDBConnector
+from src.DAO.MovieRepo import MovieRepo
 
 
 class MovieService:
-    movie_db: None
     """Service that manages movies."""
 
-    def __init__(self, movie_repo: Optional[MovieRepo] = None):
+    def __init__(
+        self,
+        movie_repo: Optional[MovieRepo] = None,
+        movie_db_connector: Optional[MovieDBConnector] = None,
+    ):
+        # Access to our own database (table movie)
         self.movie_repo = movie_repo or MovieRepo()
+        # Access to the external TMDB API
+        self.movie_db_connector = movie_db_connector or MovieDBConnector()
 
     def get_screening_movies(self) -> list[Movie]:
         """List all movies currently screening.
@@ -56,3 +63,43 @@ class MovieService:
             list of Movie objects if found, otherwise None.
         """
         return self.movie_repo.search_movies(query)
+
+    def search_tmdb(self, title: str, year: Optional[int] = None) -> list[dict]:
+        """Search movies on TMDB, so that the administrator can choose which one to import.
+        Args:
+            title (str): The title (or part of the title) of the movie.
+            year (int, optional): The release year, to reduce ambiguity.
+        Returns:
+            list[dict] of matching movies (tmdb_id, title, release_date, overview, poster_url).
+        Raises:
+            ValueError if the title is empty.
+        """
+        # We refuse an empty search (or a search made only of spaces)
+        if title is None or title.strip() == "":
+            raise ValueError("The title must not be empty")
+
+        # The connector does the call to TMDB
+        return self.movie_db_connector.search_by_title(title.strip(), year)
+
+    def import_from_tmdb(self, tmdb_id: int) -> Optional[Movie]:
+        """Get a movie from TMDB and save it in our database.
+        Args:
+            tmdb_id (int): The TMDB identifier of the movie chosen by the administrator.
+        Returns:
+            The saved Movie (with its id in our database), or None if TMDB does not know this movie.
+        Raises:
+            ValueError if the movie is already in our catalogue.
+        """
+        # 1. Check that the movie is not already in our database
+        existing_movie = self.movie_repo.get_by_id(tmdb_id)
+        if existing_movie is not None:
+            raise ValueError(f"Movie with tmdb_id [{tmdb_id}] is already in the catalogue")
+
+        # 2. Get the full details of the movie from TMDB
+        movie = self.movie_db_connector.get_by_tmdb_id(tmdb_id)
+        if movie is None:
+            # TMDB does not know this movie
+            return None
+
+        # 3. Save the movie in our database and return it (now with its id)
+        return self.movie_repo.create(movie)

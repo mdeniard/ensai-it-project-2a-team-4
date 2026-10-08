@@ -12,6 +12,7 @@ dependencies = [
     "PyJWT>=2.13.0",
     "psycopg2-binary>=2.9.12",
     "python-dotenv>=1.2.3",
+    "requests>=2.34.2",
 ]
 requires-python = "==3.14.*"
 readme = "README.md"

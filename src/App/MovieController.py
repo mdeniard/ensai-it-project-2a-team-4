@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, status
 
 from src.Business_object.Movie import Movie
@@ -5,6 +7,54 @@ from src.Model.MovieModel import MovieModel
 from src.Service.MovieService import MovieService
 
 movie_router = APIRouter(prefix="/movies", tags=["Movies"])
+
+
+# WARNING: the /search and /import routes must stay ABOVE the "/{tmdb_id}" route,
+# otherwise FastAPI would think that "search" is a tmdb_id
+
+
+@movie_router.get("/search", status_code=status.HTTP_200_OK)
+def search_movies_on_tmdb(title: str, year: Optional[int] = None):
+    """Search movies on TMDB by title (and optionally by year).
+    The administrator uses the result to choose which movie to import.
+    """
+    try:
+        movies_found = MovieService().search_tmdb(title, year)
+        return movies_found
+    except ValueError as e:
+        # The title is empty
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+    except Exception as e:
+        # Problem when calling TMDB (wrong API key, TMDB unavailable...)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error while searching on TMDB: {str(e)}",
+        ) from e
+
+
+@movie_router.post("/import/{tmdb_id}", status_code=status.HTTP_201_CREATED)
+def import_movie_from_tmdb(tmdb_id: int):
+    """Get a movie from TMDB with its tmdb_id and save it in our database."""
+    try:
+        imported_movie = MovieService().import_from_tmdb(tmdb_id)
+    except ValueError as e:
+        # The movie is already in our catalogue
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
+    except Exception as e:
+        # Problem when calling TMDB or the database
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error while importing movie: {str(e)}",
+        ) from e
+
+    # The service returns None when TMDB does not know this tmdb_id
+    if imported_movie is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Movie with tmdb_id [{tmdb_id}] not found on TMDB",
+        )
+
+    return imported_movie
 
 
 @movie_router.get("/{tmdb_id}", status_code=status.HTTP_200_OK)

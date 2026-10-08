@@ -28,6 +28,12 @@ Be sure to provide the ports used by the app in the `Network access` configurati
 
 That's all 😊
 
+# How to set up the database
+
+1. Create a PostgreSQL database (for example with pgAdmin)
+2. Copy `.env.sample` to `.env` and fill in your database information and your TMDB API key (`TMDB_API_KEY`)
+3. Run the script `sql/init_db.sql` on your database (pgAdmin > Query Tool) to create the tables
+
 # How to run the app 
 
 ```> pdm start```

@@ -6,11 +6,11 @@ class Movie:
         self,
         tmdb_id: int,
         title: str,
-        description: str,
-        duration: int,
-        released_date: str,
-        rating: float,
-        poster_url: str,
+        description: Optional[str],
+        duration: Optional[int],
+        released_date: Optional[str],
+        rating: Optional[float],
+        poster_url: Optional[str],
         id: Optional[int] = None
     ):
         self.id = id
