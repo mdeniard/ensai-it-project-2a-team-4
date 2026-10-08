@@ -8,8 +8,8 @@ from .DBConnector import DBConnector
 class UserRepo:
     db_connector: DBConnector
 
-    def __init__(self, db_connector: DBConnector):
-        self.db_connector = db_connector
+    def __init__(self, db_connector: Optional[DBConnector] = None) -> None:
+        self.db_connector = db_connector or DBConnector()
 
     def get_by_id(self, user_id: int) -> Optional[User]:
         raw_user = self.db_connector.sql_query("SELECT * from users WHERE id=%s", [user_id], "one")
@@ -25,14 +25,20 @@ class UserRepo:
         # pyrefly: ignore
         return User(**raw_user)
 
-    def insert_into_db(self, username: str, salt: str, hashed_password: str) -> User:
+    def insert_into_db(self, user: User) -> User:
         raw_created_user = self.db_connector.sql_query(
-            """
-        INSERT INTO users (id, username, salt, password)
-        VALUES (DEFAULT, %(username)s, %(salt)s, %(password)s)
+        """
+        INSERT INTO users (username, email, password_hash, salt, first_name, last_name, is_admin)
+        VALUES (%(username)s, %(email)s, %(password_hash)s, %(salt)s, %(fisrt_name)s, %(last_name)s, %(is_admin)s)
         RETURNING *;
         """,
-            {"username": username, "salt": salt, "password": hashed_password},
+            {"username": user.username,
+            "email": user.email,
+            "password_hash": user.password_hash,
+            "salt": user.salt,
+            "fisrt_name": user.first_name,
+            "last_name": user.last_name,
+            "is_admin": user.is_admin},
             "one",
         )
         # pyrefly: ignore
