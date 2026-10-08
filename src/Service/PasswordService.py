@@ -6,10 +6,10 @@ from src.DAO.UserRepo import UserRepo
 from src.Business_object.User import User
 
 
-def hash_password(password: str, salt: Optional[str] = None) -> str:
-    ## TODO
-
-    return "1234"
+def hash_password(password: str, salt: Optional[str] = "") -> str:
+    password_bytes = password.encode("utf-8") + salt.encode("utf-8")
+    hash_password = hashlib.sha256(password_bytes)
+    return hash_password.hexdigest()
 
 
 def create_salt() -> str:
