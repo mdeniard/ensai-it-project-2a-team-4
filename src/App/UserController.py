@@ -18,6 +18,17 @@ if TYPE_CHECKING:
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
+@user_router.get("/")
+def list_users(
+    credentials: Annotated[HTTPAuthorizationCredentials,
+    Depends(JWTBearer())]
+) -> list[APIUser]:
+    """
+    List all users (admin only)
+    """
+    get_admin_from_credentials(credentials)
+    users = user_service.get_all()
+    return [APIUser(id=u.id, username=u.username) for u in users]
 
 @user_router.post("/", status_code=status.HTTP_201_CREATED)
 def create_user(u: UserModel) -> APIUser:
@@ -114,4 +125,14 @@ def get_user_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIU
     user: User | None = user_repo.get_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    return APIUser(id=user.id, username=user.username)
+
+def get_admin_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIUser:
+    token = credentials.credentials
+    user_id = int(jwt_service.validate_user_jwt(token))
+    user: User | None = user_repo.get_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin privileges required")
     return APIUser(id=user.id, username=user.username)

@@ -12,6 +12,9 @@ class UserService:
     ):
         self.user_repo = user_repo or UserRepo()
 
+    def get_all(self):
+        return self.user_repo.get_all()
+
     def create_user(self, user: User) -> User:
         user.salt = create_salt()
         user.password_hash = hash_password(password=user.password_hash, salt=user.salt)

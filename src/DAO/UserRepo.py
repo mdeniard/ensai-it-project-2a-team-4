@@ -25,6 +25,18 @@ class UserRepo:
         # pyrefly: ignore
         return User(**raw_user)
 
+    def get_all(self, limit: int = 100, offset: int = 0) -> list[User]:
+        raw_users = self.db_connector.sql_query(
+            """
+            SELECT * FROM users
+            ORDER BY id
+            LIMIT %(limit)s OFFSET %(offset)s;
+            """,
+            {"limit": limit, "offset": offset},
+            "all",
+        )
+        return [User(**raw) for raw in raw_users or []]
+
     def create_user(self, user: User) -> User:
         raw_created_user = self.db_connector.sql_query(
         """
