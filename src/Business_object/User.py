@@ -8,10 +8,10 @@ class User():
         username: str,
         email: str,
         password_hash: str,
-        salt: str,
         first_name: str,
         last_name: str,
         is_admin: bool = False,
+        salt: str = "",
         id: Optional[int] = None
     ):
         self.id = id

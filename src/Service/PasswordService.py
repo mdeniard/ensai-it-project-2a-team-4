@@ -20,6 +20,9 @@ def check_password_strength(password: str):
     if len(password) < 8:
         raise Exception("Password length must be at least 8 characters")
 
+def check_password(password, salt, hash):
+    return hash_password(password, salt) == hash
+
 
 def validate_username_password(username: str, password: str, user_repo: UserRepo) -> User:
     user_with_username: Optional[User] = user_repo.get_by_username(username=username)

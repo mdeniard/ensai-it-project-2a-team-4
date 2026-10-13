@@ -25,21 +25,84 @@ class UserRepo:
         # pyrefly: ignore
         return User(**raw_user)
 
-    def insert_into_db(self, user: User) -> User:
+    def create_user(self, user: User) -> User:
         raw_created_user = self.db_connector.sql_query(
         """
         INSERT INTO users (username, email, password_hash, salt, first_name, last_name, is_admin)
-        VALUES (%(username)s, %(email)s, %(password_hash)s, %(salt)s, %(fisrt_name)s, %(last_name)s, %(is_admin)s)
+        VALUES (%(username)s, %(email)s, %(password_hash)s, %(salt)s, %(first_name)s, %(last_name)s, %(is_admin)s)
         RETURNING *;
         """,
             {"username": user.username,
             "email": user.email,
             "password_hash": user.password_hash,
             "salt": user.salt,
-            "fisrt_name": user.first_name,
+            "first_name": user.first_name,
             "last_name": user.last_name,
             "is_admin": user.is_admin},
             "one",
         )
         # pyrefly: ignore
         return User(**raw_created_user)
+
+    def update_user(self, user: User) -> User:
+        raw_updated_user = self.db_connector.sql_query(
+            """
+            UPDATE users
+            SET username = %(username)s,
+                email = %(email)s,
+                password_hash = %(password_hash)s,
+                salt = %(salt)s,
+                first_name = %(first_name)s,
+                last_name = %(last_name)s,
+                is_admin = %(is_admin)s
+            WHERE id = %(id)s
+            RETURNING *;
+            """,
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "password_hash": user.password_hash,
+                "salt": user.salt,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "is_admin": user.is_admin,
+            },
+            "one",
+        )
+        # pyrefly: ignore
+        return User(**raw_updated_user)
+
+    def update_password(self, user_id: int, password_hash: str, salt: str) -> bool:
+        """
+        Updates a user's password hash and salt.
+        Returns True if a user was updated, False if no user matched.
+        """
+        raw_updated = self.db_connector.sql_query(
+            """
+            UPDATE users
+            SET password_hash = %(password_hash)s,
+                salt = %(salt)s
+            WHERE id = %(id)s
+            RETURNING id;
+            """,
+            {"id": user_id, "password_hash": password_hash, "salt": salt},
+            "one",
+        )
+        return raw_updated is not None
+
+    def delete_user(self, user_id: int) -> bool:
+        """
+        Deletes a user by id. Returns True if a user was deleted, False if no user matched.
+        """
+        raw_deleted_user = self.db_connector.sql_query(
+            """
+            DELETE FROM users
+            WHERE id = %(id)s
+            RETURNING id;
+            """,
+            {"id": user_id},
+            "one",
+        )
+        # pyrefly: ignore
+        return raw_deleted_user is not None
