@@ -4,6 +4,7 @@ from fastapi.responses import RedirectResponse
 
 from .MovieController import movie_router
 from .UserController import user_router
+from .RoomController import room_router
 
 
 def run_app():
@@ -12,6 +13,8 @@ def run_app():
     app.include_router(user_router)
 
     app.include_router(movie_router)
+
+    app.include_router(room_router)
 
     @app.get("/", include_in_schema=False)
     async def redirect_to_docs():

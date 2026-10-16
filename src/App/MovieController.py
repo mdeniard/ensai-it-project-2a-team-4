@@ -9,10 +9,6 @@ from src.Service.MovieService import MovieService
 movie_router = APIRouter(prefix="/movies", tags=["Movies"])
 
 
-# WARNING: the /search and /import routes must stay ABOVE the "/{tmdb_id}" route,
-# otherwise FastAPI would think that "search" is a tmdb_id
-
-
 @movie_router.get("/search", status_code=status.HTTP_200_OK)
 def search_movies_on_tmdb(title: str, year: Optional[int] = None):
     """Search movies on TMDB by title (and optionally by year).
