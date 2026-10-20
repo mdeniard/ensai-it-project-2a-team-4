@@ -13,7 +13,7 @@ class RoomRepo:
 
     def get_by_id(self, id: int) -> Optional[Room]:
         raw_room = self.db_connector.sql_query(
-            "SELECT * FROM room WHERE id = %s;",
+            "SELECT * FROM rooms WHERE id = %s;",
             [id],
             "one"
         )
@@ -23,7 +23,7 @@ class RoomRepo:
 
     def get_by_number(self, room_number: int) -> Optional[Room]:
         raw_room = self.db_connector.sql_query(
-            "SELECT * FROM room WHERE room_number = %s;",
+            "SELECT * FROM rooms WHERE room_number = %s;",
             [room_number],
             "one"
         )
@@ -33,7 +33,7 @@ class RoomRepo:
 
     def get_all(self) -> list[Room]:
         raw_rooms = self.db_connector.sql_query(
-            "SELECT * FROM room;",
+            "SELECT * FROM rooms;",
             return_type="all"
         )
         if not raw_rooms:
@@ -44,7 +44,7 @@ class RoomRepo:
     def create_room(self, room: Room) -> Room:
         raw_created_room = self.db_connector.sql_query(
             """
-            INSERT INTO room (room_number, capacity)
+            INSERT INTO rooms (room_number, capacity)
             VALUES (%(room_number)s, %(capacity)s)
             RETURNING *;
             """,
@@ -59,7 +59,7 @@ class RoomRepo:
     def update_room(self, room: Room) -> Optional[Room]:
         raw_updated_room = self.db_connector.sql_query(
             """
-            UPDATE room
+            UPDATE rooms
             SET room_number = %(room_number)s,
                 capacity = %(capacity)s
             WHERE id = %(id)s
@@ -81,7 +81,7 @@ class RoomRepo:
     def delete_room(self, room_id: int) -> bool:
         raw_deleted_room = self.db_connector.sql_query(
             """
-            DELETE FROM room
+            DELETE FROM rooms
             WHERE id = %(id)s
             RETURNING id;
             """,

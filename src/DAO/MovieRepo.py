@@ -13,7 +13,7 @@ class MovieRepo:
 
     def get_by_id(self, tmdb_id: int) -> Optional[Movie]:
         raw_movie = self.db_connector.sql_query(
-            "SELECT * FROM movie WHERE tmdb_id = %s;",
+            "SELECT * FROM movies WHERE tmdb_id = %s;",
             [tmdb_id],
             "one"
         )
@@ -23,7 +23,7 @@ class MovieRepo:
 
     def get_screening_movies(self) -> Optional[Movie]:
         raw_movies = self.db_connector.sql_query(
-            "SELECT * FROM movie;",
+            "SELECT * FROM movies;",
             return_type="all"
         )
         if not raw_movies:
@@ -34,7 +34,7 @@ class MovieRepo:
     def create(self, movie) -> Movie:
         raw_created_movie = self.db_connector.sql_query(
             """
-            INSERT INTO movie (tmdb_id, title, description, duration, released_date, rating, poster_url)
+            INSERT INTO movies (tmdb_id, title, description, duration, released_date, rating, poster_url)
             VALUES (%(tmdb_id)s, %(title)s, %(description)s, %(duration)s, %(released_date)s, %(rating)s, %(poster_url)s)
             RETURNING *;
             """,
@@ -54,7 +54,7 @@ class MovieRepo:
     def update(self, movie: Movie) -> Optional[Movie]:
         raw_updated_movie = self.db_connector.sql_query(
             """
-            UPDATE movie
+            UPDATE movies
             SET tmdb_id = %(tmdb_id)s,
                 title = %(title)s,
                 description = %(description)s,
@@ -86,7 +86,7 @@ class MovieRepo:
     def delete(self, movie_id: int) -> bool:
         deleted_movie = self.db_connector.sql_query(
             """
-            DELETE FROM movie
+            DELETE FROM movies
             WHERE id = %s
             RETURNING id;
             """,
