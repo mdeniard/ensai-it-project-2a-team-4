@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse
 from .MovieController import movie_router
 from .UserController import user_router
 from .RoomController import room_router
-
+from .ScreeningController import screening_router
 
 def run_app():
     app = FastAPI(title="Projet Info 2A", description="Example project for ENSAI students")
@@ -13,6 +13,8 @@ def run_app():
     app.include_router(user_router)
 
     app.include_router(movie_router)
+
+    app.include_router(screening_router)
 
     app.include_router(room_router)
 
