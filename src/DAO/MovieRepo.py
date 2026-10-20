@@ -11,10 +11,20 @@ class MovieRepo:
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:
         self.db_connector = db_connector or DBConnector()
 
-    def get_by_id(self, tmdb_id: int) -> Optional[Movie]:
+    def get_by_tmdb_id(self, tmdb_id: int) -> Optional[Movie]:
         raw_movie = self.db_connector.sql_query(
             "SELECT * FROM movies WHERE tmdb_id = %s;",
             [tmdb_id],
+            "one"
+        )
+        if raw_movie is None:
+            return None
+        return Movie(**raw_movie)
+
+    def get_by_id(self, id: int) -> Optional[Movie]:
+        raw_movie = self.db_connector.sql_query(
+            "SELECT * FROM movies WHERE id = %s;",
+            [id],
             "one"
         )
         if raw_movie is None:
