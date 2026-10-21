@@ -81,6 +81,9 @@ def get_screening_movies():
 
 @movie_router.post("/", status_code=status.HTTP_201_CREATED)
 def create_movie(m: MovieModel):
+    """
+    Create a movie (admin only)
+    """
     try:
         created_movie = MovieService().create_movie(
             Movie(m.tmdb_id,
@@ -100,6 +103,9 @@ def create_movie(m: MovieModel):
 
 @movie_router.put("/{movie_id}", status_code=status.HTTP_200_OK)
 def update_movie(movie_id: int, m: MovieModel):
+    """
+    Update a movie by its id (admin only)
+    """
     try:
         updated_movie = MovieService().update_movie(
             Movie(m.tmdb_id,
@@ -129,6 +135,9 @@ def update_movie(movie_id: int, m: MovieModel):
 
 @movie_router.delete("/{movie_id}", status_code=status.HTTP_200_OK)
 def delete_movie(movie_id: int, confirm: bool = False):
+    """
+    Delete a movie by its id and all linked entities (admin only)
+    """
     if not confirm:
         raise HTTPException(
             status_code=409,

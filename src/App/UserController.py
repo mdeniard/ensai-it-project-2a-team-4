@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from src.Business_object.User import User
 from src.Model.APIUser import APIUser
 from src.Model.JWTResponse import JWTResponse
-from src.Model.UserModel import UserModel, UpdateUserModel, ChangeUserPasswordModel
+from src.Model.UserModel import ChangeUserPasswordModel, UpdateUserModel, UserModel
 from src.Service.PasswordService import check_password_strength, validate_username_password
 from src.Service.UserService import UserService
 
@@ -21,12 +21,12 @@ user_router = APIRouter(prefix="/users", tags=["Users"])
 @user_router.post("/", status_code=status.HTTP_201_CREATED)
 def create_user(u: UserModel) -> APIUser:
     """
-    Performs validation on the username and password
+    Register a new user (password must have a lenght >= 8)
     """
     try:
         check_password_strength(password=u.password)
     except Exception:
-        raise HTTPException(status_code=400, detail="Password too weak") from Exception
+        raise HTTPException(status_code=400, detail="Password must have a lenght >= 8") from Exception
     try:
         user: User = UserService().create_user(User(u.username, u.email, u.password, u.first_name, u.last_name))
     except Exception as error:
@@ -37,7 +37,7 @@ def create_user(u: UserModel) -> APIUser:
 @user_router.post("/jwt", status_code=status.HTTP_201_CREATED)
 def login(username: str, password: str) -> JWTResponse:
     """
-    Authenticate with username and password and obtain a token
+    Authenticate with username and password and obtain an autentication token
     """
     try:
         user = validate_username_password(username=username, password=password, user_repo=user_repo)
@@ -116,18 +116,6 @@ def delete_own_profile(
         raise HTTPException(status_code=404, detail="User not found") from error
     except Exception as error:
         raise HTTPException(status_code=409, detail="Username or email already in use") from error
-
-@user_router.post("/jwt", status_code=status.HTTP_201_CREATED)
-def login(username: str, password: str) -> JWTResponse:
-    """
-    Authenticate with username and password and obtain a token
-    """
-    try:
-        user = validate_username_password(username=username, password=password, user_repo=user_repo)
-    except Exception as error:
-        raise HTTPException(status_code=403, detail="Invalid username and password combination") from error
-
-    return jwt_service.encode_jwt(user.id)
 
 
 @user_router.get("/me", dependencies=[Depends(JWTBearer())])
