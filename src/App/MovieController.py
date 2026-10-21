@@ -128,7 +128,12 @@ def update_movie(movie_id: int, m: MovieModel):
         ) from e
 
 @movie_router.delete("/{movie_id}", status_code=status.HTTP_200_OK)
-def delete_movie(movie_id: int):
+def delete_movie(movie_id: int, confirm: bool = False):
+    if not confirm:
+        raise HTTPException(
+            status_code=409,
+            detail="Confirmation required: repeat the request with confirm=True",
+        )
     try:
         is_deleted = MovieService().delete_movie(movie_id)
         if not is_deleted:

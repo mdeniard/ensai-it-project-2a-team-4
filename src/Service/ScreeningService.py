@@ -57,3 +57,6 @@ class ScreeningService:
         return self.screening_repo.create_screening(
             Screening(movie_id=movie_id, room_id=room_id, start_time=start_time, end_time=end_time)
         )
+
+    def delete_screening(self, screening_id: int) -> bool:
+        return self.screening_repo.delete_screening(screening_id)

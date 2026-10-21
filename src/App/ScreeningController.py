@@ -40,3 +40,19 @@ def create_screening(
         raise HTTPException(status_code=404, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
+
+@screening_router.delete("/{screening_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_screening(
+    screening_id: int,
+    confirm: bool = False,
+) -> None:
+    """
+    Delete a screening by its id
+    """
+    if not confirm:
+        raise HTTPException(
+            status_code=409,
+            detail="Confirmation required: repeat the request with confirm=True",
+        )
+    if not ScreeningService().delete_screening(screening_id):
+        raise HTTPException(status_code=404, detail="Screening not found")

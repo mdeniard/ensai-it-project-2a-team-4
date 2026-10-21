@@ -70,7 +70,15 @@ def update_room(id: int, r: RoomModel):
 
 # --- Route de Suppression (DELETE) ---
 @room_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_room(id: int):
+def delete_room(id: int, confirm: bool = False,):
+    """
+    Delete a room by its id and screenings related to this room
+    """
+    if not confirm:
+        raise HTTPException(
+            status_code=409,
+            detail="Confirmation required: repeat the request with confirm=True",
+        )
     try:
         existing_room = RoomService().get_by_id(id)
         if existing_room is None:

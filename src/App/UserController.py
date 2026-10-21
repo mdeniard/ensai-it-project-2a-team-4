@@ -18,18 +18,6 @@ if TYPE_CHECKING:
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
-@user_router.get("/")
-def list_users(
-    credentials: Annotated[HTTPAuthorizationCredentials,
-    Depends(JWTBearer())]
-) -> list[APIUser]:
-    """
-    List all users (admin only)
-    """
-    get_admin_from_credentials(credentials)
-    users = user_service.get_all()
-    return [APIUser(id=u.id, username=u.username) for u in users]
-
 @user_router.post("/", status_code=status.HTTP_201_CREATED)
 def create_user(u: UserModel) -> APIUser:
     """
@@ -45,6 +33,30 @@ def create_user(u: UserModel) -> APIUser:
         raise HTTPException(status_code=409, detail="Username already exists") from error
 
     return APIUser(id=user.id, username=user.username)
+
+@user_router.post("/jwt", status_code=status.HTTP_201_CREATED)
+def login(username: str, password: str) -> JWTResponse:
+    """
+    Authenticate with username and password and obtain a token
+    """
+    try:
+        user = validate_username_password(username=username, password=password, user_repo=user_repo)
+    except Exception as error:
+        raise HTTPException(status_code=403, detail="Invalid username and password combination") from error
+
+    return jwt_service.encode_jwt(user.id)
+
+@user_router.get("/")
+def list_users(
+    credentials: Annotated[HTTPAuthorizationCredentials,
+    Depends(JWTBearer())]
+) -> list[APIUser]:
+    """
+    List all users (admin only)
+    """
+    get_admin_from_credentials(credentials)
+    users = user_service.get_all()
+    return [APIUser(id=u.id, username=u.username) for u in users]
 
 @user_router.put("/me", dependencies=[Depends(JWTBearer())])
 def update_own_profile(
@@ -86,10 +98,17 @@ def change_own_password(
 @user_router.delete("/me", dependencies=[Depends(JWTBearer())])
 def delete_own_profile(
     credentials: Annotated[HTTPAuthorizationCredentials,
-    Depends(JWTBearer())]) -> None:
+    Depends(JWTBearer())],
+    confirm: bool = False,
+    ) -> None:
     """
     Delete the authenticated user's profile
     """
+    if not confirm:
+        raise HTTPException(
+            status_code=409,
+            detail="Confirmation required: repeat the request with confirm=True",
+        )
     current_user = get_user_from_credentials(credentials)
     try:
         succes = user_service.delete_user(current_user.id)

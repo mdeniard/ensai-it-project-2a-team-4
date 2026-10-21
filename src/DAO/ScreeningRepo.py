@@ -97,3 +97,19 @@ class ScreeningRepo:
             "one",
         )
         return raw is None
+
+    def delete_screening(self, screening_id: int) -> bool:
+        """
+        Deletes a screening by id. Returns True if a row was deleted.
+        """
+        raw = self.db_connector.sql_query(
+            """
+            DELETE FROM screenings
+            WHERE id = %(id)s
+            RETURNING id;
+            """,
+            {"id": screening_id},
+            "one",
+        )
+        return raw is not None
+
