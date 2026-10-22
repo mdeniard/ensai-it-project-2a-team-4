@@ -28,7 +28,7 @@ class MockMovieRepo:
         self.movies_in_database = movies_in_database
         self.create_was_called = False
 
-    def get_by_id(self, tmdb_id):
+    def get_by_tmdb_id(self, tmdb_id):
         for movie in self.movies_in_database:
             if movie.tmdb_id == tmdb_id:
                 return movie

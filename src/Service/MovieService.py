@@ -91,7 +91,8 @@ class MovieService:
             ValueError if the movie is already in our catalogue.
         """
         # 1. Check that the movie is not already in our database
-        existing_movie = self.movie_repo.get_by_id(tmdb_id)
+        # (we search with the TMDB id, not with the id of our database)
+        existing_movie = self.movie_repo.get_by_tmdb_id(tmdb_id)
         if existing_movie is not None:
             raise ValueError(f"Movie with tmdb_id [{tmdb_id}] is already in the catalogue")
 
