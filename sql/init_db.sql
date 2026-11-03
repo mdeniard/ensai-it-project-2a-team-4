@@ -42,3 +42,11 @@ CREATE TABLE IF NOT EXISTS screenings (
     end_time   TIMESTAMPTZ NOT NULL,
     CHECK (end_time > start_time)
 );
+
+-- Ticket Types
+CREATE TABLE IF NOT EXISTS ticket_types (
+    id                  SERIAL PRIMARY KEY,
+    name                TEXT NOT NULL UNIQUE,
+    price_multiplier    NUMERIC(4, 2),
+    active              BOOLEAN
+);
