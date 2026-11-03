@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Literal, Optional, Union
 from src.DAO.UserRepo import UserRepo
 
 if TYPE_CHECKING:
-    from src.Model.User import User
+    from src.Model.UserModel import User
 
 
 class MockDBConnector:

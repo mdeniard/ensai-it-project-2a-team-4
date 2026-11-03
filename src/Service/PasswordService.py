@@ -6,7 +6,7 @@ from src.DAO.UserRepo import UserRepo
 from src.Business_object.User import User
 
 
-def hash_password(password: str, salt: Optional[str] = "") -> str:
+def hash_password(password: str, salt="") -> str:
     password_bytes = password.encode("utf-8") + salt.encode("utf-8")
     hash_password = hashlib.sha256(password_bytes)
     return hash_password.hexdigest()

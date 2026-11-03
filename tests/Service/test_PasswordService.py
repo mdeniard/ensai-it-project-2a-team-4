@@ -2,7 +2,7 @@ from typing import Optional
 
 import pytest
 
-from src.Model.User import User
+from src.Model.UserModel import UserModel
 from src.Service.PasswordService import create_salt, hash_password, validate_username_password
 
 
@@ -25,9 +25,9 @@ def test_create_salt():
 
 
 class MockUserRepo:
-    def get_by_username(self, username: str) -> Optional[User]:
+    def get_by_username(self, username: str) -> Optional[UserModel]:
         if username == "janjak":
-            return User(
+            return UserModel(
                 id=4,
                 username="janjak",
                 salt="jambon",
