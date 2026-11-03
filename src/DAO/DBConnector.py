@@ -14,6 +14,7 @@ class DBConnector:
             self.user = config["user"]
             self.password = config["password"]
             self.schema = config["schema"]
+            self.timezone = config["timezone"]
         else:
             self.host = os.environ["POSTGRES_HOST"]
             self.port = os.environ["POSTGRES_PORT"]
@@ -21,6 +22,7 @@ class DBConnector:
             self.user = os.environ["POSTGRES_USER"]
             self.password = os.environ["POSTGRES_PASSWORD"]
             self.schema = os.environ["POSTGRES_SCHEMA"]
+            self.timezone = os.environ.get("POSTGRES_TIMEZONE", "Europe/Paris")
 
     def sql_query(
         self,
@@ -35,7 +37,7 @@ class DBConnector:
                 database=self.database,
                 user=self.user,
                 password=self.password,
-                options=f"-c search_path={self.schema}",
+                options=f"-c search_path={self.schema} -c timezone={self.timezone}",
                 cursor_factory=RealDictCursor,
             ) as connection:
                 with connection.cursor() as cursor:

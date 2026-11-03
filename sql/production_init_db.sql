@@ -1,5 +1,4 @@
--- Production database initialization scripte
--- Tables are created in the schema set by POSTGRES_SCHEMA in your .env
+-- Production database initialization script
 
 CREATE SCHEMA IF NOT EXISTS production;
 SET search_path TO production;
