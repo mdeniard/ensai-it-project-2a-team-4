@@ -12,6 +12,13 @@ class MovieRepo:
         self.db_connector = db_connector or DBConnector()
 
     def get_by_tmdb_id(self, tmdb_id: int) -> Optional[Movie]:
+        """Retrieve a movie by its TMDB identifier.
+        Args:
+            tmdb_id: The unique TMDB ID of the movie.
+
+        Returns:
+            The Movie instance, or None if not found.
+        """
         raw_movie = self.db_connector.sql_query(
             "SELECT * FROM movies WHERE tmdb_id = %s;",
             [tmdb_id],
