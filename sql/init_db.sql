@@ -1,6 +1,4 @@
 -- Database initialization script
--- Run it once on your own database (pgAdmin > Query Tool, or psql -f sql/init_db.sql)
--- Tables are created in the schema set by POSTGRES_SCHEMA in your .env
 
 -- Movies
 CREATE TABLE IF NOT EXISTS movies (
@@ -49,4 +47,13 @@ CREATE TABLE IF NOT EXISTS ticket_types (
     name                TEXT NOT NULL UNIQUE,
     price_multiplier    NUMERIC(4, 2),
     active              BOOLEAN
+);
+
+-- Reservations
+CREATE TABLE IF NOT EXISTS reservations (
+    id               SERIAL PRIMARY KEY,
+    customer_id      INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    screening_id     INT NOT NULL REFERENCES screenings(id)  ON DELETE CASCADE,
+    ticket_type_id   INT NOT NULL REFERENCES ticket_types(id) ON DELETE CASCADE,
+    reserved_at      TIMESTAMPTZ NOT NULL,
 );
