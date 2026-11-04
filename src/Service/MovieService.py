@@ -55,15 +55,6 @@ class MovieService:
         """
         return self.movie_repo.delete(movie_id)
 
-    def search_movies(self, query) -> list[Movie]:
-        """Find specifics movie by a query.
-        Args:
-            query (): a query.
-        Returns:
-            list of Movie objects if found, otherwise None.
-        """
-        return self.movie_repo.search_movies(query)
-
     def search_tmdb(self, title: str, year: Optional[int] = None) -> list[dict]:
         """Search movies on TMDB, so that the administrator can choose which one to import.
         Args:

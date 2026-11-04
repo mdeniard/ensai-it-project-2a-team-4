@@ -34,8 +34,10 @@ class UserService:
 
         existing_user.username = username
         existing_user.email = email
-        existing_user.first_name = first_name
-        existing_user.last_name = last_name
+        if first_name is not None:
+            existing_user.first_name = first_name
+        if last_name is not None:
+            existing_user.last_name = last_name
 
         return self.user_repo.update_user(existing_user)
 
