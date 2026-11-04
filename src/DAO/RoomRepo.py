@@ -12,32 +12,42 @@ class RoomRepo:
         self.db_connector = db_connector or DBConnector()
 
     def get_by_id(self, id: int) -> Optional[Room]:
-        raw_room = self.db_connector.sql_query(
-            "SELECT * FROM rooms WHERE id = %s;",
-            [id],
-            "one"
-        )
+        raw_room = self.db_connector.sql_query("SELECT * FROM rooms WHERE id = %s;", [id], "one")
+        """Retrieve a room by its database identifier.
+
+        Args:
+            id: The unique database ID.
+
+        Returns:
+            The room instance, or None if not found
+        """
         if raw_room is None:
             return None
         return Room(**raw_room)
 
     def get_by_number(self, room_number: int) -> Optional[Room]:
-        raw_room = self.db_connector.sql_query(
-            "SELECT * FROM rooms WHERE room_number = %s;",
-            [room_number],
-            "one"
-        )
+        raw_room = self.db_connector.sql_query("SELECT * FROM rooms WHERE room_number = %s;", [room_number], "one")
+        """Retrieve a room by its roomnumber.
+
+        Args:
+            room_number: The unique number of the room.
+
+        Returns:
+            The room instance, or None if not found
+        """
         if raw_room is None:
             return None
         return Room(**raw_room)
 
     def get_all(self) -> list[Room]:
-        raw_rooms = self.db_connector.sql_query(
-            "SELECT * FROM rooms;",
-            return_type="all"
-        )
+        raw_rooms = self.db_connector.sql_query("SELECT * FROM rooms;", return_type="all")
+        """Retrieve all rooms from the database.
+
+        Returns:
+            A list of room instances, or an empty list if none found
+        """
         if not raw_rooms:
-                    return []
+            return []
 
         return [Room(**room_data) for room_data in raw_rooms]
 
@@ -65,11 +75,7 @@ class RoomRepo:
             WHERE id = %(id)s
             RETURNING *;
             """,
-            {
-                "id": room.id,
-                "room_number": room.room_number,
-                "capacity": room.capacity
-            },
+            {"id": room.id, "room_number": room.room_number, "capacity": room.capacity},
             "one",
         )
 

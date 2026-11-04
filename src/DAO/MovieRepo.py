@@ -29,6 +29,13 @@ class MovieRepo:
         return Movie(**raw_movie)
 
     def get_by_id(self, id: int) -> Optional[Movie]:
+        """Retrieve a movie by database identifier.
+        Args: 
+            id: the unique database id for the movie. 
+        
+        Returns: 
+            The movie instance, or None if not found.
+        """
         raw_movie = self.db_connector.sql_query(
             "SELECT * FROM movies WHERE id = %s;",
             [id],
@@ -39,6 +46,11 @@ class MovieRepo:
         return Movie(**raw_movie)
 
     def get_screening_movies(self) -> Optional[Movie]:
+        """Retrieve all screening movies from the database.
+        
+        Returns: 
+            A list of movie instances, or an empty list of none found.
+        """ 
         raw_movies = self.db_connector.sql_query(
             "SELECT * FROM movies;",
             return_type="all"
