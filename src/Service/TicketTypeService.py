@@ -26,15 +26,12 @@ class TicketTypeService:
         """
         return self.ticket_type_repo.get_all()
 
-    def create_ticket_type(self,id: int, name: str, price_multiplier: float, active: bool) ->TicketType:
+    def create_ticket_type(self, ticket_type: TicketType) ->TicketType:
         """Create a ticket type
         Args:
-            id : id of the ticket type
-            name : name
-            price_multiplier : the price multiplier
-            active
+            ticket_type : data concerning the ticket type
         """
-        return self.ticket_type_repo.insert_ticket_type(id, name, price_multiplier, active)
+        return self.ticket_type_repo.insert_ticket_type(ticket_type)
 
     def update_ticket_type(self, ticket_type: TicketType)-> Optional[TicketType]:
         """Update a ticket type

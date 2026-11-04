@@ -28,18 +28,17 @@ class TicketTypeRepo:
         )
         return [TicketType(**raw) for raw in raw_ticket_type or []]
 
-    def insert_ticket_type(self,id: int, name: str, price_multiplier: float, active : bool) -> TicketType:
+    def insert_ticket_type(self, ticket_type: TicketType) -> TicketType:
         raw = self.db_connector.sql_query(
             """
             INSERT INTO ticket_types (id, name, price_multiplier, active)
-            VALUES (%(id)s, %(name)s, %(price_multiplier)s, %(active)s)
+            VALUES %(name)s, %(price_multiplier)s, %(active)s)
             RETURNING *;
             """,
             {
-                "id": id,
-                "name": name,
-                "price_multiplier": price_multiplier,
-                "active": active,
+                "name": ticket_type.name,
+                "price_multiplier": ticket_type.price_multiplier,
+                "active": ticket_type.active,
             },
             "one",
         )
@@ -49,10 +48,9 @@ class TicketTypeRepo:
         raw_updated_ticket_type = self.db_connector.sql_query(
             """
             UPDATE ticket_types
-            SET id = %(id)s,
-                name = %(name)s,
+            SET name = %(name)s,
                 price_multiplier = %(price_multiplier)s,
-                active = %(active)s,
+                active = %(active)s
             WHERE id = %(id)s
             RETURNING *;
             """,
