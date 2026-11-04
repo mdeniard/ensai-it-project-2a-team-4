@@ -102,7 +102,7 @@ def test_insert_ticket_type():
     ticket_type_repo = TicketTypeRepo(db_connector)
 
     # WHEN we save it
-    created_ticket_type = ticket_type_repo.insert_ticket_type(1, "Student", 0.7, active=True)
+    created_ticket_type = ticket_type_repo.insert_ticket_type(TicketType("Student", 0.7, True, id=1))
 
     # THEN we get the ticket type with the id given by the database
     assert created_ticket_type.id == 1
