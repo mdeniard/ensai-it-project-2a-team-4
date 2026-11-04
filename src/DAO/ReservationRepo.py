@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from src.Business_object.Reservation import Reservation
@@ -28,6 +29,44 @@ class ReservationRepo:
             return_type="all"
         )
         return [Reservation(**raw) for raw in raw_reservation or []]
+
+    def get_accounting_by_movie(
+        self,
+        movie_id: int,
+        start_from: Optional[datetime] = None,
+        end_at: Optional[datetime] = None
+    ):
+        query = """
+            SELECT
+                m.id AS movie_id,
+                s.id AS screening_id,
+                s.start_time,
+                COUNT(r.id) AS ticket_sold,
+                COALESCE(SUM(r.price_paid), 0) AS revenue
+            FROM screenings s
+            JOIN movies m ON m.id = s.movie_id
+            LEFT JOIN reservations r
+                ON r.screening_id = s.id
+        """
+
+        params: dict = {"movie_id": movie_id}
+
+        if start_from is not None:
+            query += " AND r.reserved_at >= %(start_from)s"
+            params["start_from"] = start_from
+
+        if end_at is not None:
+            query += " AND r.reserved_at <= %(end_at)s"
+            params["end_at"] = end_at
+
+        query += """
+            WHERE m.id = %(movie_id)s
+            GROUP BY m.id, s.id, s.start_time
+            ORDER BY s.start_time;
+        """
+
+        return self.db_connector.sql_query(query, params, "all")
+
 
     def create_reservation(self, reservation: Reservation)-> Reservation:
         raw = self.db_connector.sql_query(
