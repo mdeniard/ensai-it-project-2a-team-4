@@ -32,15 +32,16 @@ class ReservationRepo:
     def create_reservation(self, reservation: Reservation)-> Reservation:
         raw = self.db_connector.sql_query(
             """
-            INSERT INTO reservations (customer_id, screening_id, ticket_type_id, reserved_at)
-            VALUES (%(customer_id)s, %(screening_id)s, %(ticket_type_id)s, %(reserved_at)s)
+            INSERT INTO reservations (customer_id, screening_id, ticket_type_id, reserved_at, price_paid)
+            VALUES (%(customer_id)s, %(screening_id)s, %(ticket_type_id)s, %(reserved_at)s, %(price_paid)s)
             RETURNING *;
             """,
             {
                 "customer_id": reservation.customer_id,
                 "screening_id": reservation.screening_id,
                 "ticket_type_id": reservation.ticket_type_id,
-                "reserved_at": reservation.reserved_at
+                "reserved_at": reservation.reserved_at,
+                "price_paid": reservation.price_paid,
             },
             "one",
         )

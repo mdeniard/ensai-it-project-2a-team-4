@@ -102,15 +102,20 @@ CREATE TABLE IF NOT EXISTS screenings (
     room_id    INT NOT NULL REFERENCES rooms(id)  ON DELETE CASCADE,
     start_time TIMESTAMPTZ NOT NULL,
     end_time   TIMESTAMPTZ NOT NULL,
+    -- Base price of a ticket for this screening, chosen by the administrator when creating the screening
+    -- (multiplied by the coefficient of the ticket type)
+    base_price NUMERIC(6, 2) NOT NULL CHECK (base_price > 0),
     CHECK (end_time > start_time)
 );
 
-INSERT INTO screenings (movie_id, room_id, start_time, end_time)
+INSERT INTO screenings (movie_id, room_id, start_time, end_time, base_price)
 SELECT m.id,
        r.id,
        (d.day + t.local_time) AT TIME ZONE 'Europe/Paris',
        (d.day + t.local_time) AT TIME ZONE 'Europe/Paris'
-           + (m.duration + 20) * INTERVAL '1 minute'
+           + (m.duration + 20) * INTERVAL '1 minute',
+       -- Base price chosen for the demo: 8.00 before 18:00, 10.00 in the evening
+       CASE WHEN t.local_time < TIME '18:00' THEN 8.00 ELSE 10.00 END
 FROM (VALUES
     -- room_number, tmdb_id, time zone (Paris)
     (1, 1381071, TIME '14:00'),  -- Godzilla Minus Zero
@@ -157,11 +162,12 @@ CREATE TABLE IF NOT EXISTS ticket_types (
     active              BOOLEAN
 );
 
+-- price paid = base price of the screening x price_multiplier (example for a screening at 10 euros)
 INSERT INTO ticket_types (name, price_multiplier, active) VALUES
-('Normal', 1.0, TRUE),
-('Child', 0.6, TRUE),
-('Student', 0.8, TRUE),
-('Senior', 0.9, TRUE)
+('Normal', 1.0, TRUE),         -- 10.00 euros
+('Child', 0.6, TRUE),          --  6.00 euros
+('ENSAI Student', 0.8, TRUE),  --  8.00 euros
+('ENSAI Staff', 0.9, TRUE)     --  9.00 euros
 ON CONFLICT (name) DO NOTHING;
 
 
@@ -171,6 +177,9 @@ CREATE TABLE IF NOT EXISTS reservations (
     customer_id      INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     screening_id     INT NOT NULL REFERENCES screenings(id)  ON DELETE CASCADE,
     ticket_type_id   INT NOT NULL REFERENCES ticket_types(id) ON DELETE CASCADE,
-    reserved_at      TIMESTAMPTZ NOT NULL
+    reserved_at      TIMESTAMPTZ NOT NULL,
+    -- Price actually paid (saved at booking time, so that a later change of prices
+    -- does not change the revenue of past sales)
+    price_paid       NUMERIC(6, 2) NOT NULL
 );
 

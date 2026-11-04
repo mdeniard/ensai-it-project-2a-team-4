@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 import pytest
 
@@ -16,15 +17,22 @@ NOW = datetime.now(timezone.utc)
 
 
 class MockScreeningRepo:
-    """Fake ScreeningRepo: screening 1 is tomorrow, screening 2 was yesterday."""
+    """Fake ScreeningRepo:
+    - screening 1 is tomorrow, base price 10.00
+    - screening 2 was yesterday
+    - screening 3 is tomorrow, base price 9.50
+    """
 
     def get_by_id(self, object_id):
         if object_id == 1:
             return Screening(movie_id=1, room_id=1, start_time=NOW + timedelta(days=1),
-                             end_time=NOW + timedelta(days=1, hours=2), id=1)
+                             end_time=NOW + timedelta(days=1, hours=2), base_price=10.0, id=1)
         if object_id == 2:
             return Screening(movie_id=1, room_id=1, start_time=NOW - timedelta(days=1),
-                             end_time=NOW - timedelta(hours=22), id=2)
+                             end_time=NOW - timedelta(hours=22), base_price=10.0, id=2)
+        if object_id == 3:
+            return Screening(movie_id=1, room_id=1, start_time=NOW + timedelta(days=1),
+                             end_time=NOW + timedelta(days=1, hours=2), base_price=9.5, id=3)
         return None
 
 
@@ -38,13 +46,17 @@ class MockUserRepo:
 
 
 class MockTicketTypeRepo:
-    """Fake TicketTypeRepo: ticket type 1 is active, ticket type 2 is not."""
+    """Fake TicketTypeRepo: ticket type 2 is not active, the others are."""
 
     def get_by_id(self, object_id):
         if object_id == 1:
             return TicketType("Normal", 1.0, True, id=1)
         if object_id == 2:
             return TicketType("Old", 0.5, False, id=2)
+        if object_id == 3:
+            return TicketType("ENSAI Student", 0.8, True, id=3)
+        if object_id == 4:
+            return TicketType("Special", 0.7, True, id=4)
         return None
 
 
@@ -159,3 +171,68 @@ def test_create_reservation_room_full():
     with pytest.raises(ValueError):
         reservation_service.create_reservation(Reservation(customer_id=5, screening_id=1, ticket_type_id=1))
     assert reservation_repo.saved_reservation is None
+
+
+# ---------- compute_ticket_price ----------
+
+
+def test_compute_ticket_price_normal():
+    # Normal ticket: 10.00 x 1.0 = 10.00
+    assert ReservationService.compute_ticket_price(10.0, 1.0) == Decimal("10.00")
+
+
+def test_compute_ticket_price_reduced():
+    # Reduced ticket: 10.00 x 0.8 = 8.00 and 10.00 x 0.6 = 6.00
+    assert ReservationService.compute_ticket_price(10.0, 0.8) == Decimal("8.00")
+    assert ReservationService.compute_ticket_price(10.0, 0.6) == Decimal("6.00")
+
+
+def test_compute_ticket_price_rounded_to_the_cent():
+    # 9.50 x 0.7 = 6.65 (and not 6.6499999... like with float)
+    assert ReservationService.compute_ticket_price(9.5, 0.7) == Decimal("6.65")
+    # 9.99 x 0.5 = 4.995, rounded up to 5.00
+    assert ReservationService.compute_ticket_price(9.99, 0.5) == Decimal("5.00")
+
+
+def test_compute_ticket_price_with_decimal_values():
+    # PostgreSQL returns NUMERIC columns as Decimal: it must work too
+    assert ReservationService.compute_ticket_price(Decimal("10.00"), Decimal("0.80")) == Decimal("8.00")
+
+
+# ---------- price saved with the reservation ----------
+
+
+def test_create_reservation_saves_normal_price():
+    # GIVEN a screening at 10.00 and the Normal ticket type (x1.0)
+    reservation_repo = MockReservationRepo()
+    reservation_service = make_service(reservation_repo)
+
+    # WHEN the customer books
+    created = reservation_service.create_reservation(Reservation(customer_id=5, screening_id=1, ticket_type_id=1))
+
+    # THEN he pays 10.00
+    assert created.price_paid == Decimal("10.00")
+
+
+def test_create_reservation_saves_student_price():
+    # GIVEN a screening at 10.00 and the ENSAI Student ticket type (x0.8)
+    reservation_repo = MockReservationRepo()
+    reservation_service = make_service(reservation_repo)
+
+    # WHEN the customer books
+    created = reservation_service.create_reservation(Reservation(customer_id=5, screening_id=1, ticket_type_id=3))
+
+    # THEN he pays 8.00
+    assert created.price_paid == Decimal("8.00")
+
+
+def test_create_reservation_uses_base_price_of_the_screening():
+    # GIVEN a screening at 9.50 and a ticket type at x0.7
+    reservation_repo = MockReservationRepo()
+    reservation_service = make_service(reservation_repo)
+
+    # WHEN the customer books
+    created = reservation_service.create_reservation(Reservation(customer_id=5, screening_id=3, ticket_type_id=4))
+
+    # THEN he pays 9.50 x 0.7 = 6.65
+    assert created.price_paid == Decimal("6.65")

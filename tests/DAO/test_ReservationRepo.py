@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from src.Business_object.Reservation import Reservation
 from src.DAO.ReservationRepo import ReservationRepo
@@ -35,12 +36,15 @@ RESERVATION_ROW = {
     "screening_id": 3,
     "ticket_type_id": 2,
     "reserved_at": RESERVED_AT,
+    "price_paid": Decimal("8.00"),
 }
 
 
 def make_reservation():
     """Create the Reservation object used in the tests (not saved yet, so no id)."""
-    return Reservation(customer_id=5, screening_id=3, ticket_type_id=2, reserved_at=RESERVED_AT)
+    return Reservation(
+        customer_id=5, screening_id=3, ticket_type_id=2, reserved_at=RESERVED_AT, price_paid=Decimal("8.00")
+    )
 
 
 # ---------- get_by_id ----------
@@ -113,6 +117,9 @@ def test_create_reservation():
     assert "id" not in db_connector.last_data
     assert db_connector.last_data["customer_id"] == 5
     assert db_connector.last_data["screening_id"] == 3
+    # AND the price paid is saved too
+    assert db_connector.last_data["price_paid"] == Decimal("8.00")
+    assert created.price_paid == Decimal("8.00")
 
 
 # ---------- check_room_capacity_reservation ----------

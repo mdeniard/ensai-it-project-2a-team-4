@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Optional
 
 from src.Business_object.Reservation import Reservation
@@ -28,6 +29,23 @@ class ReservationService:
 
     def get_customer_reservation(self, customer_id: int) -> list[Reservation]:
         return self.reservation_repo.get_customer_reservations(customer_id)
+
+    @staticmethod
+    def compute_ticket_price(base_price, price_multiplier) -> Decimal:
+        """Compute the price of one ticket.
+        Args:
+            base_price: the base price of the screening (for example 10.00)
+            price_multiplier: the coefficient of the ticket type (for example 0.8 for students)
+        Returns:
+            The price, rounded to 2 decimals (for example 8.00)
+        """
+        # We use Decimal (and not float) to compute money:
+        # with float, 0.1 + 0.2 gives 0.30000000000000004
+        # (str() is used so that a float like 0.8 becomes exactly Decimal("0.8"))
+        price = Decimal(str(base_price)) * Decimal(str(price_multiplier))
+
+        # Round to the cent (0.005 is rounded up, like in a shop)
+        return price.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     def create_reservation(self, reservation: Reservation) -> Reservation:
         """Book one ticket for a screening.
@@ -69,5 +87,10 @@ class ReservationService:
 
         # The date of the reservation is set by the server (not by the customer)
         reservation.reserved_at = now
+
+        # The price paid = base price of the screening x coefficient of the ticket type.
+        # It is saved with the reservation, so that a later change of the prices
+        # does not change the revenue of past sales
+        reservation.price_paid = self.compute_ticket_price(screening.base_price, ticket_type.price_multiplier)
 
         return self.reservation_repo.create_reservation(reservation)

@@ -40,7 +40,13 @@ class ScreeningService:
     def room_schedule(self, room_number: int) -> list[Screening]:
         return self.screening_repo.room_schedule(room_number)
 
-    def create_screening(self, movie_id: int, room_id: int, start_time: datetime) -> Screening:
+    def create_screening(
+        self, movie_id: int, room_id: int, start_time: datetime, base_price: float
+    ) -> Screening:
+        # The base price of a ticket must be positive
+        if base_price <= 0:
+            raise ValueError("The base price must be greater than 0")
+
         movie = self.movie_repo.get_by_id(movie_id)
         if not movie:
             raise LookupError(f"Movie [{movie_id}] not found")
@@ -55,7 +61,13 @@ class ScreeningService:
             raise ValueError("The room is already booked on this time slot")
 
         return self.screening_repo.create_screening(
-            Screening(movie_id=movie_id, room_id=room_id, start_time=start_time, end_time=end_time)
+            Screening(
+                movie_id=movie_id,
+                room_id=room_id,
+                start_time=start_time,
+                end_time=end_time,
+                base_price=base_price,
+            )
         )
 
     def delete_screening(self, screening_id: int) -> bool:

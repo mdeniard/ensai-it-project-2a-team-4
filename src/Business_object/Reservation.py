@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Optional
 
 class Reservation:
@@ -9,6 +10,8 @@ class Reservation:
         ticket_type_id: int,
         # None until the reservation is saved (the date is set by ReservationService)
         reserved_at: Optional[datetime] = None,
+        # None until the reservation is saved (the price is computed by ReservationService)
+        price_paid: Optional[Decimal] = None,
         id: Optional[int] = None,
     ):
         self.id = id
@@ -16,6 +19,7 @@ class Reservation:
         self.screening_id = screening_id
         self.ticket_type_id = ticket_type_id
         self.reserved_at = reserved_at
+        self.price_paid = price_paid
 
     def __str__(self) -> str:
         if self.reserved_at is None:
@@ -25,5 +29,5 @@ class Reservation:
         return (
             f"Reservation #{self.id} "
             f"(Customer: {self.customer_id}, Screening: {self.screening_id}, Ticket Type: {self.ticket_type_id}) "
-            f"made on {date_str}"
+            f"made on {date_str}, price paid: {self.price_paid} euros"
         )

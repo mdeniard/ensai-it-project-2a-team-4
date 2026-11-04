@@ -43,6 +43,9 @@ CREATE TABLE IF NOT EXISTS screenings (
     room_id    INT NOT NULL REFERENCES rooms(id)  ON DELETE CASCADE,
     start_time TIMESTAMPTZ NOT NULL,
     end_time   TIMESTAMPTZ NOT NULL,
+    -- Base price of a ticket for this screening, chosen by the administrator when creating the screening
+    -- (multiplied by the coefficient of the ticket type)
+    base_price NUMERIC(6, 2) NOT NULL CHECK (base_price > 0),
     CHECK (end_time > start_time)
 );
 
@@ -60,5 +63,8 @@ CREATE TABLE IF NOT EXISTS reservations (
     customer_id      INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     screening_id     INT NOT NULL REFERENCES screenings(id)  ON DELETE CASCADE,
     ticket_type_id   INT NOT NULL REFERENCES ticket_types(id) ON DELETE CASCADE,
-    reserved_at      TIMESTAMPTZ NOT NULL
+    reserved_at      TIMESTAMPTZ NOT NULL,
+    -- Price actually paid (saved at booking time, so that a later change of prices
+    -- does not change the revenue of past sales)
+    price_paid       NUMERIC(6, 2) NOT NULL
 );

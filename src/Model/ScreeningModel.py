@@ -7,11 +7,13 @@ LOCAL_TZ = ZoneInfo("Europe/Paris")
 
 class ScreeningModel(BaseModel):
     model_config = ConfigDict(json_schema_extra={
-        "example": {"movie_id": 1, "room_id": 1, "start_time": "2026-11-05T20:00:00"}
+        "example": {"movie_id": 1, "room_id": 1, "start_time": "2026-11-05T20:00:00", "base_price": 10.0}
     })
     movie_id: int
     room_id: int
     start_time: datetime
+    # Base price of a ticket for this screening (required: chosen by the administrator)
+    base_price: float
 
     @field_validator("start_time")
     @classmethod

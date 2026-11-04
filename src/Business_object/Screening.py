@@ -9,6 +9,8 @@ class Screening:
         room_id: int,
         start_time: datetime,
         end_time: datetime,
+        # Base price of a ticket for this screening (chosen by the administrator)
+        base_price: float,
         id: Optional[int] = None,
     ):
         self.id = id
@@ -16,6 +18,7 @@ class Screening:
         self.room_id = room_id
         self.start_time = start_time
         self.end_time = end_time
+        self.base_price = base_price
 
     def __str__(self) -> str:
             start_str = self.start_time.strftime("%Y-%m-%d %H:%M")

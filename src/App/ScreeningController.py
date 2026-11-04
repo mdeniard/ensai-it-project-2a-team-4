@@ -35,7 +35,7 @@ def create_screening(
     Create a screening
     """
     try:
-        return ScreeningService().create_screening(s.movie_id, s.room_id, s.start_time)
+        return ScreeningService().create_screening(s.movie_id, s.room_id, s.start_time, s.base_price)
     except LookupError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except ValueError as e:
