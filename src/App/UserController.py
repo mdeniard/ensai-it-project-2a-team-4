@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
-@user_router.post("/", status_code=status.HTTP_201_CREATED)
+@user_router.post("/", summary="Create a user", status_code=status.HTTP_201_CREATED)
 def create_user(u: UserModel) -> APIUser:
     """
     Register a new user (password must have a lenght >= 8)
@@ -34,7 +34,7 @@ def create_user(u: UserModel) -> APIUser:
 
     return APIUser(id=user.id, username=user.username)
 
-@user_router.post("/jwt", status_code=status.HTTP_201_CREATED)
+@user_router.post("/jwt", summary="Login", status_code=status.HTTP_201_CREATED)
 def login(username: str, password: str) -> JWTResponse:
     """
     Authenticate with username and password and obtain an autentication token
@@ -46,7 +46,7 @@ def login(username: str, password: str) -> JWTResponse:
 
     return jwt_service.encode_jwt(user.id)
 
-@user_router.get("/")
+@user_router.get("/", summary="List users")
 def list_users(
     credentials: Annotated[HTTPAuthorizationCredentials,
     Depends(JWTBearer())]
@@ -58,7 +58,7 @@ def list_users(
     users = user_service.get_all()
     return [APIUser(id=u.id, username=u.username) for u in users]
 
-@user_router.put("/me", dependencies=[Depends(JWTBearer())])
+@user_router.put("/me", summary="Update own profile", dependencies=[Depends(JWTBearer())])
 def update_own_profile(
     u: UpdateUserModel,
     credentials: Annotated[HTTPAuthorizationCredentials,
@@ -82,7 +82,7 @@ def update_own_profile(
 
     return APIUser(id=user.id, username=user.username)
 
-@user_router.put("/me/password", status_code=status.HTTP_204_NO_CONTENT)
+@user_router.put("/me/password", summary="Change own password", status_code=status.HTTP_204_NO_CONTENT)
 def change_own_password(
     m: ChangeUserPasswordModel,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
@@ -95,7 +95,7 @@ def change_own_password(
     except ValueError as error:
         raise HTTPException(status_code=400, detail="Password too weak") from error
 
-@user_router.delete("/me", dependencies=[Depends(JWTBearer())])
+@user_router.delete("/me", summary="Delete own profile", dependencies=[Depends(JWTBearer())])
 def delete_own_profile(
     credentials: Annotated[HTTPAuthorizationCredentials,
     Depends(JWTBearer())],
@@ -118,7 +118,7 @@ def delete_own_profile(
         raise HTTPException(status_code=409, detail="Username or email already in use") from error
 
 
-@user_router.get("/me", dependencies=[Depends(JWTBearer())])
+@user_router.get("/me", summary="Get user own profile", dependencies=[Depends(JWTBearer())])
 def get_user_own_profile(credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())]) -> APIUser:
     """
     Get the authenticated user profile
