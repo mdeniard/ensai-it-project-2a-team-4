@@ -1,3 +1,5 @@
+from src.Service.PasswordService import WrongPasswordError
+from src.Service.PasswordService import UnknownUsernameError
 from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -34,15 +36,22 @@ def create_user(u: UserModel) -> APIUser:
 
     return APIUser(id=user.id, username=user.username)
 
-@user_router.post("/jwt", summary="Login", status_code=status.HTTP_201_CREATED)
+@user_router.post("/jwt", summary="Login", status_code=status.HTTP_200_OK)
 def login(username: str, password: str) -> JWTResponse:
-    """
-    Authenticate with username and password and obtain an autentication token
-    """
     try:
-        user = validate_username_password(username=username, password=password, user_repo=user_repo)
-    except Exception as error:
-        raise HTTPException(status_code=403, detail="Invalid username and password combination") from error
+        user = validate_username_password(username, password, user_repo)
+    except UnknownUsernameError as error:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unknown username",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from error
+    except WrongPasswordError as error:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Wrong password",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from error
 
     return jwt_service.encode_jwt(user.id)
 

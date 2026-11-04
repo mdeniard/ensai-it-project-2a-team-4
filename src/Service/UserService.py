@@ -2,7 +2,7 @@ from typing import Optional
 
 from src.DAO.UserRepo import UserRepo
 from src.Business_object.User import User
-from src.Service.PasswordService import check_password_strength, create_salt, hash_password, check_password
+from src.Service.PasswordService import check_password_strength, create_salt, hash_password, compare_password
 
 
 class UserService:
@@ -44,7 +44,7 @@ class UserService:
         if not user:
             raise ValueError("User not found")
 
-        if not check_password(old_password, user.salt, user.password_hash):
+        if not compare_password(old_password, user.salt, user.password_hash):
             raise PermissionError("Wrong current password")
 
         check_password_strength(password=new_password)

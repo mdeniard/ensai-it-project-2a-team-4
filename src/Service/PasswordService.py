@@ -1,3 +1,4 @@
+from pydantic._internal._utils import ValueItems
 import hashlib
 import secrets
 from typing import Optional
@@ -20,12 +21,23 @@ def check_password_strength(password: str):
     if len(password) < 8:
         raise Exception("Password length must be at least 8 characters")
 
-def check_password(password, salt, hash):
+def compare_password(password, salt, hash):
     return hash_password(password, salt) == hash
 
 
-def validate_username_password(username: str, password: str, user_repo: UserRepo) -> User:
-    user_with_username: Optional[User] = user_repo.get_by_username(username=username)
-    ## TODO
+class InvalidCredentialsError(Exception):
+    """Base class for login failures"""
 
-    return user_with_username
+class UnknownUsernameError(InvalidCredentialsError):
+    """Username not found"""
+
+class WrongPasswordError(InvalidCredentialsError):
+    """Password does not match"""
+
+def validate_username_password(username: str, password: str, user_repo: UserRepo) -> User:
+    user = user_repo.get_by_username(username=username)
+    if user is None:
+        raise UnknownUsernameError()
+    if not compare_password(password, user.salt, user.password_hash):
+        raise WrongPasswordError()
+    return user
