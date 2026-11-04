@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 
 from src.Business_object.Reservation import Reservation
@@ -48,18 +47,31 @@ class ReservationRepo:
         return Reservation(**raw)
 
 
-    def check_room_capacity_reservation(self, reservation: Reservation)-> bool:
+    def check_room_capacity_reservation(self, reservation: Reservation) -> bool:
+        """Check if there is still at least one free seat for the screening of the reservation.
+        (one reservation = one ticket = one seat)
+        Returns:
+            True if the room is not full, False if it is full (or if the screening does not exist).
+        """
+        # We start from the screening (and not from the reservations), so that a screening
+        # with no reservation yet is found too: the LEFT JOIN then gives 0 tickets sold
         raw = self.db_connector.sql_query(
-             """
-            SELECT COUNT(re.id)
-            FROM reservation re
-            LEFT JOIN screenings s on s.id = re.screening_id
+            """
+            SELECT ro.capacity, COUNT(re.id) AS tickets_sold
+            FROM screenings s
             JOIN rooms ro ON ro.id = s.room_id
+            LEFT JOIN reservations re ON re.screening_id = s.id
             WHERE s.id = %(screening_id)s
-            GROUP BY s.id, ro.capacity
-            HAVING COUNT(re.id) < ro.capacity;
+            GROUP BY ro.capacity;
             """,
             {"screening_id": reservation.screening_id},
-            "all",
+            "one",
         )
-        return raw is not None and len(raw) > 0
+
+        # No row: the screening does not exist
+        if raw is None:
+            return False
+
+        # There is a free seat if fewer tickets were sold than the capacity of the room
+        # pyrefly: ignore
+        return raw["tickets_sold"] < raw["capacity"]

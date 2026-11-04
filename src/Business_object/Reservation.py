@@ -7,7 +7,8 @@ class Reservation:
         customer_id: int,
         screening_id: int,
         ticket_type_id: int,
-        reserved_at: datetime,
+        # None until the reservation is saved (the date is set by ReservationService)
+        reserved_at: Optional[datetime] = None,
         id: Optional[int] = None,
     ):
         self.id = id
@@ -17,7 +18,10 @@ class Reservation:
         self.reserved_at = reserved_at
 
     def __str__(self) -> str:
-        date_str = self.reserved_at.strftime("%Y-%m-%d %H:%M")
+        if self.reserved_at is None:
+            date_str = "(not saved yet)"
+        else:
+            date_str = self.reserved_at.strftime("%Y-%m-%d %H:%M")
         return (
             f"Reservation #{self.id} "
             f"(Customer: {self.customer_id}, Screening: {self.screening_id}, Ticket Type: {self.ticket_type_id}) "

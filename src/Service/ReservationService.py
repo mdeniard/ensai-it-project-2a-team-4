@@ -2,46 +2,72 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from src.Business_object.Reservation import Reservation
-from src.Business_object.Screening import Screening
 from src.DAO.ReservationRepo import ReservationRepo
 from src.DAO.ScreeningRepo import ScreeningRepo
+from src.DAO.TicketTypeRepo import TicketTypeRepo
 from src.DAO.UserRepo import UserRepo
 
 
 class ReservationService:
-    """Class that manages reervation"""
+    """Class that manages reservations"""
 
     def __init__(
         self,
-        reservation_repo: Optional[ReservationRepo]= None,
-        screening_repo: Optional[ScreeningRepo]= None,
-        user_repo: Optional[UserRepo]= None
+        reservation_repo: Optional[ReservationRepo] = None,
+        screening_repo: Optional[ScreeningRepo] = None,
+        user_repo: Optional[UserRepo] = None,
+        ticket_type_repo: Optional[TicketTypeRepo] = None,
     ) -> None:
         self.reservation_repo = reservation_repo or ReservationRepo()
         self.screening_repo = screening_repo or ScreeningRepo()
         self.user_repo = user_repo or UserRepo()
+        self.ticket_type_repo = ticket_type_repo or TicketTypeRepo()
 
     def get_by_id(self, id: int) -> Optional[Reservation]:
         return self.reservation_repo.get_by_id(id)
 
-    def get_customer_reservation(self, customer_id: int)-> list[Reservation]:
+    def get_customer_reservation(self, customer_id: int) -> list[Reservation]:
         return self.reservation_repo.get_customer_reservations(customer_id)
 
-    def create_reservation(self, reservation:Reservation)-> Reservation:
-
-        # Check that screening didn't already starts
+    def create_reservation(self, reservation: Reservation) -> Reservation:
+        """Book one ticket for a screening.
+        Args:
+            reservation: the reservation to save (customer, screening and ticket type)
+        Returns:
+            The saved reservation (with its id)
+        Raises:
+            LookupError if the screening, the customer or the ticket type does not exist.
+            ValueError if the screening has already started, the ticket type is not active
+            or the room is full.
+        """
         now = datetime.now(timezone.utc)
-        screening = self.screening_repo.filter_screenings(start_from=now)
-        if reservation.screening_id not in screening:
+
+        # Check that the screening exists
+        screening = self.screening_repo.get_by_id(reservation.screening_id)
+        if screening is None:
             raise LookupError(f"Screening [{reservation.screening_id}] not found")
+
+        # Check that screening didn't already start
+        if screening.start_time <= now:
+            raise ValueError(f"Screening [{reservation.screening_id}] has already started")
 
         # Check that customer exist
         customer = self.user_repo.get_by_id(reservation.customer_id)
         if not customer:
             raise LookupError(f"Customer [{reservation.customer_id}] not found")
 
+        # Check that the ticket type exists and can still be sold
+        ticket_type = self.ticket_type_repo.get_by_id(reservation.ticket_type_id)
+        if ticket_type is None:
+            raise LookupError(f"Ticket type [{reservation.ticket_type_id}] not found")
+        if not ticket_type.active:
+            raise ValueError(f"Ticket type [{ticket_type.name}] is not available")
+
         # Check that room is not full
         if not self.reservation_repo.check_room_capacity_reservation(reservation):
             raise ValueError("The screening is full")
+
+        # The date of the reservation is set by the server (not by the customer)
+        reservation.reserved_at = now
 
         return self.reservation_repo.create_reservation(reservation)
