@@ -1,4 +1,5 @@
--- Production database initialization script
+-- Production database initialization script (tables + demo data)
+-- WARNING: when you change a table here, change it in test_init_db.sql too
 
 CREATE SCHEMA IF NOT EXISTS production;
 SET search_path TO production;
@@ -160,8 +161,16 @@ INSERT INTO ticket_types (name, price_multiplier, active) VALUES
 ('Normal', 1.0, TRUE),
 ('Child', 0.6, TRUE),
 ('Student', 0.8, TRUE),
-('Senior', 0.9, TRUE);
+('Senior', 0.9, TRUE)
+ON CONFLICT (name) DO NOTHING;
 
 
 -- Reservations --------------------------
+CREATE TABLE IF NOT EXISTS reservations (
+    id               SERIAL PRIMARY KEY,
+    customer_id      INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    screening_id     INT NOT NULL REFERENCES screenings(id)  ON DELETE CASCADE,
+    ticket_type_id   INT NOT NULL REFERENCES ticket_types(id) ON DELETE CASCADE,
+    reserved_at      TIMESTAMPTZ NOT NULL
+);
 

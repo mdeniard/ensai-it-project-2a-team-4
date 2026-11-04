@@ -1,4 +1,9 @@
--- Database initialization script
+-- Database initialization script for the TEST schema (empty tables)
+-- The demo data is in production_init_db.sql (schema "production")
+-- WARNING: when you change a table here, change it in production_init_db.sql too
+
+CREATE SCHEMA IF NOT EXISTS test;
+SET search_path TO test;
 
 -- Movies
 CREATE TABLE IF NOT EXISTS movies (
@@ -55,5 +60,5 @@ CREATE TABLE IF NOT EXISTS reservations (
     customer_id      INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     screening_id     INT NOT NULL REFERENCES screenings(id)  ON DELETE CASCADE,
     ticket_type_id   INT NOT NULL REFERENCES ticket_types(id) ON DELETE CASCADE,
-    reserved_at      TIMESTAMPTZ NOT NULL,
+    reserved_at      TIMESTAMPTZ NOT NULL
 );
