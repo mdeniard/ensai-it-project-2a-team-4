@@ -33,12 +33,11 @@ class ReservationRepo:
     def create_reservation(self, reservation: Reservation)-> Reservation:
         raw = self.db_connector.sql_query(
             """
-            INSERT INTO reservations (id, customer_id, screening_id, ticket_type_id, reserved_at)
-            VALUES (%(id)s, %(customer_id)s, %(screening_id)s, %(ticket_type_id)s, %(reserved_at)s)
+            INSERT INTO reservations (customer_id, screening_id, ticket_type_id, reserved_at)
+            VALUES (%(customer_id)s, %(screening_id)s, %(ticket_type_id)s, %(reserved_at)s)
             RETURNING *;
             """,
             {
-                "id": reservation.id,
                 "customer_id": reservation.customer_id,
                 "screening_id": reservation.screening_id,
                 "ticket_type_id": reservation.ticket_type_id,
@@ -47,3 +46,20 @@ class ReservationRepo:
             "one",
         )
         return Reservation(**raw)
+
+
+    def check_room_capacity_reservation(self, reservation: Reservation)-> bool:
+        raw = self.db_connector.sql_query(
+             """
+            SELECT COUNT(re.id)
+            FROM reservation re
+            LEFT JOIN screenings s on s.id = re.screening_id
+            JOIN rooms ro ON ro.id = s.room_id
+            WHERE s.id = %(screening_id)s
+            GROUP BY s.id, ro.capacity
+            HAVING COUNT(re.id) < ro.capacity;
+            """,
+            {"screening_id": reservation.screening_id},
+            "all",
+        )
+        return raw is not None and len(raw) > 0

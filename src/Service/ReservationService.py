@@ -41,7 +41,7 @@ class ReservationService:
             raise LookupError(f"Customer [{reservation.customer_id}] not found")
 
         # Check that room is not full
-
-
+        if not self.reservation_repo.check_room_capacity_reservation(reservation):
+            raise ValueError("The screening is full")
 
         return self.reservation_repo.create_reservation(reservation)
