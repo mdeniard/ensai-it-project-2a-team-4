@@ -22,3 +22,10 @@ class User():
         self.first_name = first_name
         self.last_name = last_name
         self.is_admin = is_admin
+
+    def __str__(self) -> str:
+        role = "Admin" if self.is_admin else "User"
+        return (
+            f"User #{self.id}: {self.first_name} {self.last_name} "
+            f"(@{self.username} - {self.email}) [{role}]"
+        )

@@ -69,8 +69,8 @@ class ScreeningRepo:
     def create_screening(self, screening: Screening) -> Screening:
         raw = self.db_connector.sql_query(
             """
-            INSERT INTO screenings (movie_id, room_id, start_time, end_time)
-            VALUES (%(movie_id)s, %(room_id)s, %(start_time)s, %(end_time)s)
+            INSERT INTO screenings (movie_id, room_id, start_time, end_time, base_price)
+            VALUES (%(movie_id)s, %(room_id)s, %(start_time)s, %(end_time)s, %(base_price)s)
             RETURNING *;
             """,
             {
@@ -78,6 +78,7 @@ class ScreeningRepo:
                 "room_id": screening.room_id,
                 "start_time": screening.start_time,
                 "end_time": screening.end_time,
+                "base_price": screening.base_price,
             },
             "one",
         )

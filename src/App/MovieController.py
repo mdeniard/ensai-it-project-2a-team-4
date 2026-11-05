@@ -1,20 +1,26 @@
-from typing import Optional
-
-from fastapi import APIRouter, HTTPException, status
+from typing import Optional, Annotated
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials
 
 from src.Business_object.Movie import Movie
 from src.Model.MovieModel import MovieModel
 from src.Service.MovieService import MovieService
+from src.App.UserController import get_admin_from_credentials
 
 movie_router = APIRouter(prefix="/movies", tags=["Movies"])
+from .JWTBearer import JWTBearer
 
-
-@movie_router.get("/search", status_code=status.HTTP_200_OK)
-def search_movies_on_tmdb(title: str, year: Optional[int] = None):
+@movie_router.get("/search", summary="Search movies on TMDB (Admin Only)",status_code=status.HTTP_200_OK)
+def search_movies_on_tmdb(
+    title: str,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
+    year: Optional[int] = None,
+    ):
     """Search movies on TMDB by title (and optionally by year).
-    The administrator uses the result to choose which movie to import.
+    The administrator uses the result to choose which movie to import. (Admin Only)
     """
     try:
+        get_admin_from_credentials(credentials)
         movies_found = MovieService().search_tmdb(title, year)
         return movies_found
     except ValueError as e:
@@ -28,10 +34,13 @@ def search_movies_on_tmdb(title: str, year: Optional[int] = None):
         ) from e
 
 
-@movie_router.post("/import/{tmdb_id}", status_code=status.HTTP_201_CREATED)
-def import_movie_from_tmdb(tmdb_id: int):
-    """Get a movie from TMDB with its tmdb_id and save it in our database."""
+@movie_router.post("/import/{tmdb_id}", summary="Import movies from TMDB (Admin Only)", status_code=status.HTTP_201_CREATED)
+def import_movie_from_tmdb(
+    tmdb_id: int,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],):
+    """Get a movie from TMDB with its tmdb_id and save it in our database. (Admin Only)"""
     try:
+        get_admin_from_credentials(credentials)
         imported_movie = MovieService().import_from_tmdb(tmdb_id)
     except ValueError as e:
         # The movie is already in our catalogue
@@ -53,8 +62,9 @@ def import_movie_from_tmdb(tmdb_id: int):
     return imported_movie
 
 
-@movie_router.get("/{tmdb_id}", status_code=status.HTTP_200_OK)
+@movie_router.get("/{tmdb_id}", summary="Get movie by id", status_code=status.HTTP_200_OK)
 def get_movie_by_id(tmdb_id: int):
+    """Get a movie from the theater database using its id."""
     try:
         my_movie = MovieService().get_by_id(tmdb_id)
         return my_movie
@@ -66,8 +76,9 @@ def get_movie_by_id(tmdb_id: int):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid request") from Exception
 
-@movie_router.get("/", status_code=status.HTTP_200_OK)
+@movie_router.get("/", summary="Get screening movies", status_code=status.HTTP_200_OK)
 def get_screening_movies():
+    """Get all movie from the theater database."""
     try:
         screening_movies = MovieService().get_screening_movies()
         return screening_movies
@@ -79,7 +90,7 @@ def get_screening_movies():
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid request") from Exception
 
-@movie_router.post("/", status_code=status.HTTP_201_CREATED)
+@movie_router.post("/", summary="Create a movie (Admin Only)", status_code=status.HTTP_201_CREATED)
 def create_movie(m: MovieModel):
     """
     Create a movie (admin only)
@@ -101,10 +112,10 @@ def create_movie(m: MovieModel):
             detail=f"Error while creating movie: {str(e)}"
         ) from e
 
-@movie_router.put("/{movie_id}", status_code=status.HTTP_200_OK)
+@movie_router.put("/{movie_id}", summary="Update a movie (Admin Only)", status_code=status.HTTP_200_OK)
 def update_movie(movie_id: int, m: MovieModel):
     """
-    Update a movie by its id (admin only)
+    Update a movie by its id (Admin Only)
     """
     try:
         updated_movie = MovieService().update_movie(
@@ -133,10 +144,10 @@ def update_movie(movie_id: int, m: MovieModel):
             detail=f"Error while updating movie: {str(e)}"
         ) from e
 
-@movie_router.delete("/{movie_id}", status_code=status.HTTP_200_OK)
+@movie_router.delete("/{movie_id}", summary="Delete a movie (Admin Only)", status_code=status.HTTP_200_OK)
 def delete_movie(movie_id: int, confirm: bool = False):
     """
-    Delete a movie by its id and all linked entities (admin only)
+    Delete a movie by its id and all linked entities (Admin Only)
     """
     if not confirm:
         raise HTTPException(

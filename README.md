@@ -32,7 +32,12 @@ That's all 😊
 
 1. Create a PostgreSQL database (for example with pgAdmin)
 2. Copy `.env.sample` to `.env` and fill in your database information and your TMDB API key (`TMDB_API_KEY`)
-3. Run the script `sql/init_db.sql` on your database (pgAdmin > Query Tool) to create the tables
+3. Run the scripts on your database (pgAdmin > Query Tool):
+   - `sql/test_init_db.sql` creates the `test` schema with empty tables (to test the app without touching the demo data)
+   - `sql/production_init_db.sql` creates the `production` schema with demo data (movies, users, rooms, screenings, ticket types)
+4. In your `.env`, set `POSTGRES_SCHEMA` to `test` or `production`, then restart the app
+
+⚠️ The tables are defined in both scripts: when you change a table, change it in both files.
 
 # How to run the app 
 

@@ -9,7 +9,7 @@ from src.Service.RoomService import RoomService
 room_router = APIRouter(prefix="/rooms", tags=["Rooms"])
 
 
-@room_router.get("/{id}", status_code=status.HTTP_200_OK)
+@room_router.get("/{id}", summary="Get room by id", status_code=status.HTTP_200_OK)
 def get_room_by_id(id: int):
     try:
         room = RoomService().get_by_id(id)
@@ -22,7 +22,7 @@ def get_room_by_id(id: int):
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid request") from e
 
-@room_router.get("/", status_code=status.HTTP_200_OK)
+@room_router.get("/", summary="Get all room", status_code=status.HTTP_200_OK)
 def get_all_rooms():
     try:
         rooms = RoomService().get_all()
@@ -30,7 +30,7 @@ def get_all_rooms():
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid request") from e
 
-@room_router.post("/", status_code=status.HTTP_201_CREATED)
+@room_router.post("/", summary="Create a room (Admin Only)", status_code=status.HTTP_201_CREATED)
 def create(r: RoomModel):
     try:
         created_room = RoomService().create_room(
@@ -43,7 +43,7 @@ def create(r: RoomModel):
             detail=f"Error while creating room: {str(e)}"
         ) from e
 
-@room_router.put("/{id}", status_code=status.HTTP_200_OK)
+@room_router.put("/{id}", summary="Update a room (Admin Only)", status_code=status.HTTP_200_OK)
 def update_room(id: int, r: RoomModel):
     try:
         existing_room = RoomService().get_by_id(id)
@@ -69,7 +69,7 @@ def update_room(id: int, r: RoomModel):
 
 
 # --- Route de Suppression (DELETE) ---
-@room_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@room_router.delete("/{id}", summary="Delete a room (Admin Only)", status_code=status.HTTP_204_NO_CONTENT)
 def delete_room(id: int, confirm: bool = False,):
     """
     Delete a room by its id and screenings related to this room
