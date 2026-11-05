@@ -13,20 +13,22 @@ class ScreeningRepo:
         self.db_connector = db_connector or DBConnector()
 
     def get_by_id(self, id: int) -> Optional[Screening]:
-        raw_screening = self.db_connector.sql_query(
-            "SELECT * FROM screenings WHERE id = %s;",
-            [id],
-            "one"
-        )
+        raw_screening = self.db_connector.sql_query("SELECT * FROM screenings WHERE id = %s;", [id], "one")
+        """Retrieve a screening by its database identifier.
+
+        Args:
+            id: The unique database identifier.
+
+        Returns: 
+            The screening instance, or None if not found.
+        """
         if raw_screening is None:
             return None
         return Screening(**raw_screening)
 
     def filter_screenings(
-        self,
-        start_from: Optional[datetime] = datetime.now(),
-        movie_id: Optional[int] = None
-        ) -> list[Screening]:
+        self, start_from: Optional[datetime] = datetime.now(), movie_id: Optional[int] = None
+    ) -> list[Screening]:
         query = """
             SELECT * FROM screenings
             WHERE start_time >= %(start_from)s
@@ -113,4 +115,3 @@ class ScreeningRepo:
             "one",
         )
         return raw is not None
-

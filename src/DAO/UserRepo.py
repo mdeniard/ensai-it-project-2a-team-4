@@ -39,18 +39,20 @@ class UserRepo:
 
     def create_user(self, user: User) -> User:
         raw_created_user = self.db_connector.sql_query(
-        """
+            """
         INSERT INTO users (username, email, password_hash, salt, first_name, last_name, is_admin)
         VALUES (%(username)s, %(email)s, %(password_hash)s, %(salt)s, %(first_name)s, %(last_name)s, %(is_admin)s)
         RETURNING *;
         """,
-            {"username": user.username,
-            "email": user.email,
-            "password_hash": user.password_hash,
-            "salt": user.salt,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "is_admin": user.is_admin},
+            {
+                "username": user.username,
+                "email": user.email,
+                "password_hash": user.password_hash,
+                "salt": user.salt,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "is_admin": user.is_admin,
+            },
             "one",
         )
         # pyrefly: ignore

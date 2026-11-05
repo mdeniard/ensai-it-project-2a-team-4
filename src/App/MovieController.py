@@ -1,20 +1,26 @@
-from typing import Optional
-
-from fastapi import APIRouter, HTTPException, status
+from typing import Optional, Annotated
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials
 
 from src.Business_object.Movie import Movie
 from src.Model.MovieModel import MovieModel
 from src.Service.MovieService import MovieService
+from src.App.UserController import get_admin_from_credentials
 
 movie_router = APIRouter(prefix="/movies", tags=["Movies"])
-
+from .JWTBearer import JWTBearer
 
 @movie_router.get("/search", summary="Search movies on TMDB (Admin Only)",status_code=status.HTTP_200_OK)
-def search_movies_on_tmdb(title: str, year: Optional[int] = None):
+def search_movies_on_tmdb(
+    title: str,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
+    year: Optional[int] = None,
+    ):
     """Search movies on TMDB by title (and optionally by year).
     The administrator uses the result to choose which movie to import. (Admin Only)
     """
     try:
+        get_admin_from_credentials(credentials)
         movies_found = MovieService().search_tmdb(title, year)
         return movies_found
     except ValueError as e:
@@ -29,9 +35,12 @@ def search_movies_on_tmdb(title: str, year: Optional[int] = None):
 
 
 @movie_router.post("/import/{tmdb_id}", summary="Import movies from TMDB (Admin Only)", status_code=status.HTTP_201_CREATED)
-def import_movie_from_tmdb(tmdb_id: int):
+def import_movie_from_tmdb(
+    tmdb_id: int,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],):
     """Get a movie from TMDB with its tmdb_id and save it in our database. (Admin Only)"""
     try:
+        get_admin_from_credentials(credentials)
         imported_movie = MovieService().import_from_tmdb(tmdb_id)
     except ValueError as e:
         # The movie is already in our catalogue
