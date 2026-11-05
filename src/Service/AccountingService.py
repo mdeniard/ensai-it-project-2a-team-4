@@ -56,7 +56,7 @@ class AccoutingService:
             screening["tickets_sold"] for screening in screenings
         )
 
-        return {movie_id, total_revenue, total_tickets}
+        return {"movie_id": movie_id, "total_revenue": total_revenue, "total_tickets": total_tickets}
 
     def get_accounting_by_period(
         self,
