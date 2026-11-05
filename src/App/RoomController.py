@@ -1,3 +1,7 @@
+from src.App import JWTBearer
+from fastapi import Depends
+from fastapi.security import HTTPAuthorizationCredentials
+from typing import Annotated
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
@@ -5,6 +9,7 @@ from fastapi import APIRouter, HTTPException, status
 from src.Business_object.Room import Room
 from src.Model.RoomModel import RoomModel
 from src.Service.RoomService import RoomService
+from src.App.UserController import get_user_from_credentials, get_admin_from_credentials
 
 room_router = APIRouter(prefix="/rooms", tags=["Rooms"])
 
@@ -31,8 +36,12 @@ def get_all_rooms():
         raise HTTPException(status_code=400, detail="Invalid request") from e
 
 @room_router.post("/", summary="Create a room (Admin Only)", status_code=status.HTTP_201_CREATED)
-def create(r: RoomModel):
+def create(
+    r: RoomModel,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
+    ):
     try:
+        get_admin_from_credentials(credentials)
         created_room = RoomService().create_room(
             Room(r.room_number, r.capacity)
         )
@@ -44,8 +53,13 @@ def create(r: RoomModel):
         ) from e
 
 @room_router.put("/{id}", summary="Update a room (Admin Only)", status_code=status.HTTP_200_OK)
-def update_room(id: int, r: RoomModel):
+def update_room(
+    id: int,
+    r: RoomModel,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
+    ):
     try:
+        get_admin_from_credentials(credentials)
         existing_room = RoomService().get_by_id(id)
         if existing_room is None:
             raise HTTPException(
@@ -70,7 +84,11 @@ def update_room(id: int, r: RoomModel):
 
 # --- Route de Suppression (DELETE) ---
 @room_router.delete("/{id}", summary="Delete a room (Admin Only)", status_code=status.HTTP_204_NO_CONTENT)
-def delete_room(id: int, confirm: bool = False,):
+def delete_room(
+    id: int,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
+    confirm: bool = False,
+    ):
     """
     Delete a room by its id and screenings related to this room
     """
@@ -80,6 +98,7 @@ def delete_room(id: int, confirm: bool = False,):
             detail="Confirmation required: repeat the request with confirm=True",
         )
     try:
+        get_admin_from_credentials(credentials)
         existing_room = RoomService().get_by_id(id)
         if existing_room is None:
             raise HTTPException(
