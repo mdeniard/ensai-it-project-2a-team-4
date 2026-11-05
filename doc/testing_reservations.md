@@ -8,7 +8,6 @@ It uses the `test` schema, so the demo data of the `production` schema is never 
 
 1. In pgAdmin, run `sql/test_init_db.sql` (Query Tool → paste the script → ▶). It creates the `test` schema with empty tables.
    If the `test` schema already exists from an older version of the script, first run `DROP SCHEMA test CASCADE;`
-   (`CREATE TABLE IF NOT EXISTS` does not add the new columns to an existing table).
 2. In your `.env` file, set `POSTGRES_SCHEMA=test`.
 3. In the terminal, from the project folder, run `pdm install`, then `pdm start`.
 4. Open **http://localhost:8000/docs**.
@@ -20,8 +19,8 @@ There is no endpoint for the ticket types yet, so we add them with SQL:
 ```sql
 INSERT INTO test.ticket_types (name, price_multiplier, active) VALUES
 ('Normal', 1.0, TRUE),
-('Old', 0.5, FALSE),
-('ENSAI Student', 0.8, TRUE);
+('ENSAI Student', 0.5, FALSE),
+('ENSAI Staff', 0.8, TRUE);
 ```
 
 Ticket types 1 and 3 are active, ticket type 2 is not.
