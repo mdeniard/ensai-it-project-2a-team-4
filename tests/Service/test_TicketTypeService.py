@@ -97,6 +97,33 @@ def test_get_screening_movies_no_ticket_type():
     assert ticket_type_service.get_all_ticket_types() == []
 
 
+# ---------- get_active_ticket_types ----------
+
+
+def test_get_active_ticket_types_hides_inactive():
+    # GIVEN the database contains an active ticket type and an inactive one
+    inactive_row = dict(NORMAL_ROW)
+    inactive_row["active"] = False
+    ticket_type_repo = TicketTypeRepo(MockDBConnector([STUDENT_ROW, inactive_row]))
+    ticket_type_service = TicketTypeService(ticket_type_repo)
+
+    # WHEN we list the ticket types available for booking
+    ticket_types = ticket_type_service.get_active_ticket_types()
+
+    # THEN we only get the active one
+    assert len(ticket_types) == 1
+    assert ticket_types[0].name == "Student"
+
+
+def test_get_active_ticket_types_no_ticket_type():
+    # GIVEN the ticket_types table is empty
+    ticket_type_repo = TicketTypeRepo(MockDBConnector([]))
+    ticket_type_service = TicketTypeService(ticket_type_repo)
+
+    # WHEN we list the ticket types available for booking / THEN we get an empty list
+    assert ticket_type_service.get_active_ticket_types() == []
+
+
 # ---------- insert ----------
 
 

@@ -8,6 +8,7 @@ from .RoomController import room_router
 from .ScreeningController import screening_router
 from .ReservationController import reservation_router
 from .AccountingController import accounting_router
+from .TicketTypeController import ticket_type_router
 
 def run_app():
     app = FastAPI(title="Projet Info 2A", description="Example project for ENSAI students")
@@ -23,6 +24,8 @@ def run_app():
     app.include_router(reservation_router)
 
     app.include_router(accounting_router)
+
+    app.include_router(ticket_type_router)
 
     @app.get("/", include_in_schema=False)
     async def redirect_to_docs():

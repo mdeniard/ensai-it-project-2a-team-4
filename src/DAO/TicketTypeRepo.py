@@ -23,7 +23,7 @@ class TicketTypeRepo:
 
     def get_all(self)-> list[TicketType]:
         raw_ticket_type = self.db_connector.sql_query(
-            "SELECT * FROM ticket_types;",
+            "SELECT * FROM ticket_types ORDER BY id;",
             return_type="all"
         )
         return [TicketType(**raw) for raw in raw_ticket_type or []]

@@ -26,6 +26,18 @@ class TicketTypeService:
         """
         return self.ticket_type_repo.get_all()
 
+    def get_active_ticket_types(self) -> list[TicketType]:
+        """Get the ticket types that a customer can choose when booking
+        Returns:
+            list[TicketType] containing only the active ticket types.
+        """
+        active_ticket_types = []
+        for ticket_type in self.ticket_type_repo.get_all():
+            # An inactive ticket type can no longer be sold, so we do not show it
+            if ticket_type.active:
+                active_ticket_types.append(ticket_type)  # noqa: PERF401 (a simple loop is easier to read here)
+        return active_ticket_types
+
     def create_ticket_type(self, ticket_type: TicketType) ->TicketType:
         """Create a ticket type
         Args:
