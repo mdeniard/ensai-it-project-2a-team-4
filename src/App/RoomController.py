@@ -1,15 +1,13 @@
-from src.App import JWTBearer
-from fastapi import Depends
+from typing import Annotated, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
-from typing import Annotated
-from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status
-
+from src.App.JWTBearer import JWTBearer
+from src.App.UserController import get_admin_from_credentials, get_user_from_credentials
 from src.Business_object.Room import Room
 from src.Model.RoomModel import RoomModel
 from src.Service.RoomService import RoomService
-from src.App.UserController import get_user_from_credentials, get_admin_from_credentials
 
 room_router = APIRouter(prefix="/rooms", tags=["Rooms"])
 

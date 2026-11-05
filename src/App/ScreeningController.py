@@ -1,4 +1,4 @@
-from src.App import JWTBearer
+from src.App.JWTBearer import JWTBearer
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials
 from typing import Annotated
@@ -62,7 +62,7 @@ def delete_screening(
             status_code=409,
             detail="Confirmation required: repeat the request with confirm=True",
         )
-    try:
-        get_admin_from_credentials(credentials)
-        if not ScreeningService().delete_screening(screening_id):
-            raise HTTPException(status_code=404, detail="Screening not found")
+
+    get_admin_from_credentials(credentials)
+    if not ScreeningService().delete_screening(screening_id):
+        raise HTTPException(status_code=404, detail="Screening not found")

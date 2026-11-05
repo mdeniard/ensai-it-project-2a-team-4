@@ -157,8 +157,8 @@ def update_movie(
 @movie_router.delete("/{movie_id}", summary="Delete a movie (Admin Only)", status_code=status.HTTP_200_OK)
 def delete_movie(
     movie_id: int,
-    confirm: bool = False,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
+    confirm: bool = False,
     ):
     """
     Delete a movie by its id and all linked entities (Admin Only)

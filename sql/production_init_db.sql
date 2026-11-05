@@ -183,3 +183,44 @@ CREATE TABLE IF NOT EXISTS reservations (
     price_paid       NUMERIC(6, 2) NOT NULL
 );
 
+INSERT INTO reservations (customer_id, screening_id, ticket_type_id, reserved_at, price_paid)
+SELECT u.id,
+       s.id,
+       tt.id,
+       v.reserved_at,
+       ROUND(s.base_price * tt.price_multiplier, 2)
+FROM (VALUES
+    ('john',  1, 1381071, 0, TIME '14:00', 'Normal',        TIMESTAMPTZ '2026-11-02 10:15:00+01'),  -- Godzilla
+    ('john',  1, 1381071, 0, TIME '14:00', 'Child',         TIMESTAMPTZ '2026-11-02 10:16:00+01'),  -- Godzilla
+    ('mary',  1, 1381071, 0, TIME '14:00', 'ENSAI Student', TIMESTAMPTZ '2026-11-03 18:40:00+01'),  -- Godzilla
+    ('mary',  2, 1381071, 0, TIME '19:30', 'Normal',        TIMESTAMPTZ '2026-11-03 18:42:00+01'),  -- Godzilla
+
+    ('john',  1, 1437925, 1, TIME '17:00', 'Normal',        TIMESTAMPTZ '2026-11-02 14:20:00+01'),  -- Moulin
+    ('mary',  3, 1437925, 1, TIME '15:00', 'Child',         TIMESTAMPTZ '2026-11-03 11:00:00+01'),  -- Moulin
+    ('john',  4, 1437925, 2, TIME '20:00', 'Normal',        TIMESTAMPTZ '2026-11-04 16:30:00+01'),  -- Moulin
+
+    ('mary',  1, 1255833, 0, TIME '20:00', 'Normal',        TIMESTAMPTZ '2026-11-02 20:10:00+01'),  -- Whalefall
+    ('john',  3, 1255833, 1, TIME '18:00', 'ENSAI Student', TIMESTAMPTZ '2026-11-03 09:45:00+01'),  -- Whalefall
+    ('mary',  5, 1255833, 2, TIME '16:00', 'ENSAI Staff',   TIMESTAMPTZ '2026-11-04 12:00:00+01'),  -- Whalefall
+
+    ('john',  2, 1507877, 0, TIME '14:00', 'Normal',        TIMESTAMPTZ '2026-11-03 08:30:00+01'),  -- Another Day
+    ('mary',  3, 1507877, 3, TIME '20:30', 'Normal',        TIMESTAMPTZ '2026-11-04 19:15:00+01'),  -- Another Day
+
+    ('john',  2, 1263337, 1, TIME '16:45', 'Child',         TIMESTAMPTZ '2026-11-02 15:00:00+01'),  -- Heart of the Beast
+    ('mary',  5, 1263337, 2, TIME '21:15', 'ENSAI Student', TIMESTAMPTZ '2026-11-03 21:00:00+01'),  -- Heart of the Beast
+    ('john',  6, 1263337, 3, TIME '15:00', 'Normal',        TIMESTAMPTZ '2026-11-04 10:10:00+01')   -- Heart of the Beast
+) AS v(username, room_number, tmdb_id, day_offset, local_time, ticket_type, reserved_at)
+JOIN users        u  ON u.username    = v.username
+JOIN ticket_types tt ON tt.name       = v.ticket_type
+JOIN rooms        r  ON r.room_number = v.room_number
+JOIN movies       m  ON m.tmdb_id     = v.tmdb_id
+JOIN screenings   s  ON s.room_id  = r.id
+                    AND s.movie_id = m.id
+                    AND s.start_time = ((DATE '2026-11-05' + v.day_offset) + v.local_time) AT TIME ZONE 'Europe/Paris'
+WHERE NOT EXISTS (
+    SELECT 1 FROM reservations re
+    WHERE re.customer_id  = u.id
+      AND re.screening_id = s.id
+      AND re.ticket_type_id = tt.id
+      AND re.reserved_at  = v.reserved_at
+);
