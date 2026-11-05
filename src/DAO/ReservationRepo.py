@@ -41,7 +41,7 @@ class ReservationRepo:
                 m.id AS movie_id,
                 s.id AS screening_id,
                 s.start_time,
-                COUNT(r.id) AS ticket_sold,
+                COUNT(r.id) AS tickets_sold,
                 COALESCE(SUM(r.price_paid), 0) AS revenue
             FROM screenings s
             JOIN movies m ON m.id = s.movie_id
