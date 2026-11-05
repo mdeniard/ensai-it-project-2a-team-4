@@ -8,12 +8,21 @@ from fastapi.security import HTTPAuthorizationCredentials
 from src.Service.AccountingService import AccountingService
 
 from .JWTBearer import JWTBearer
-from .UserController import get_user_from_credentials
+from .UserController import get_admin_from_credentials
 
-accounting_router = APIRouter(prefix="/accounting", tags=["Accounting"])
+
+def require_admin(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
+):
+    return get_admin_from_credentials(credentials)
+
+accounting_router = APIRouter(
+    prefix="/accounting",
+    tags=["Accounting"],
+    dependencies=[Depends(require_admin)],
+)
 
 # All the routes of this controller require to be logged in (JWTBearer):
-# in the Swagger, log in with POST /users/jwt, then paste the token in "Authorize"
 
 @accounting_router.get("/movies/{movie_id}", status_code=status.HTTP_200_OK)
 def get_accounting_by_movie(
@@ -33,11 +42,11 @@ def get_accounting_by_movie(
             status_code=404,
             detail="Movie not found",
         ) from e
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=400,
             detail="Invalid request: The start date is after the end date",
-        ) from ValueError
+        ) from e
 
 @accounting_router.get("/movies/{movie_id}/details", status_code=status.HTTP_200_OK)
 def detailed_accounting_by_movie(
@@ -46,7 +55,7 @@ def detailed_accounting_by_movie(
     end_at: Optional[datetime] = None
 ):
     """
-    Get the revenue and the number of tickets sold for a movie,
+    Get the revenue and the number of tickets sold for each screening of a movie,
     optionally between two dates.
     """
     try:
@@ -57,11 +66,11 @@ def detailed_accounting_by_movie(
             status_code=404,
             detail="Movie not found",
         ) from e
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=400,
             detail="Invalid request: The start date is after the end date",
-        ) from ValueError
+        ) from e
 
 @accounting_router.get("/period", status_code=status.HTTP_200_OK)
 def get_accounting_by_period(
@@ -82,8 +91,8 @@ def get_accounting_by_period(
             status_code=404,
             detail="Movie not found",
         ) from e
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=400,
             detail="Invalid request: The start date is after the end date",
-        ) from ValueError
+        ) from e
