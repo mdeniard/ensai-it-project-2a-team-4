@@ -6,6 +6,7 @@ from src.Business_object.Movie import Movie
 from src.Model.MovieModel import MovieModel
 from src.Service.MovieService import MovieService
 from src.App.UserController import get_admin_from_credentials
+from src.App.UserController import get_user_from_credentials
 
 movie_router = APIRouter(prefix="/movies", tags=["Movies"])
 from .JWTBearer import JWTBearer
@@ -91,11 +92,15 @@ def get_screening_movies():
         raise HTTPException(status_code=400, detail="Invalid request") from Exception
 
 @movie_router.post("/", summary="Create a movie (Admin Only)", status_code=status.HTTP_201_CREATED)
-def create_movie(m: MovieModel):
+def create_movie(
+    m: MovieModel,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
+    ):
     """
     Create a movie (admin only)
     """
     try:
+        get_admin_from_credentials(credentials)
         created_movie = MovieService().create_movie(
             Movie(m.tmdb_id,
             m.title,
@@ -113,11 +118,16 @@ def create_movie(m: MovieModel):
         ) from e
 
 @movie_router.put("/{movie_id}", summary="Update a movie (Admin Only)", status_code=status.HTTP_200_OK)
-def update_movie(movie_id: int, m: MovieModel):
+def update_movie(
+    movie_id: int,
+    m: MovieModel,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
+    ):
     """
     Update a movie by its id (Admin Only)
     """
     try:
+        get_admin_from_credentials(credentials)
         updated_movie = MovieService().update_movie(
             Movie(m.tmdb_id,
             m.title,
@@ -145,7 +155,11 @@ def update_movie(movie_id: int, m: MovieModel):
         ) from e
 
 @movie_router.delete("/{movie_id}", summary="Delete a movie (Admin Only)", status_code=status.HTTP_200_OK)
-def delete_movie(movie_id: int, confirm: bool = False):
+def delete_movie(
+    movie_id: int,
+    confirm: bool = False,
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
+    ):
     """
     Delete a movie by its id and all linked entities (Admin Only)
     """
@@ -155,6 +169,7 @@ def delete_movie(movie_id: int, confirm: bool = False):
             detail="Confirmation required: repeat the request with confirm=True",
         )
     try:
+        get_admin_from_credentials(credentials)
         is_deleted = MovieService().delete_movie(movie_id)
         if not is_deleted:
             raise HTTPException(

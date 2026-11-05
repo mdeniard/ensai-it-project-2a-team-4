@@ -24,7 +24,7 @@ accounting_router = APIRouter(
 
 # All the routes of this controller require to be logged in (JWTBearer):
 
-@accounting_router.get("/movies/{movie_id}", status_code=status.HTTP_200_OK)
+@accounting_router.get("/movies/{movie_id}", summary="Get accounting by movie (Admin Only)", status_code=status.HTTP_200_OK)
 def get_accounting_by_movie(
     movie_id: int,
     start_from: Optional[datetime] = None,
@@ -48,7 +48,7 @@ def get_accounting_by_movie(
             detail="Invalid request: The start date is after the end date",
         ) from e
 
-@accounting_router.get("/movies/{movie_id}/details", status_code=status.HTTP_200_OK)
+@accounting_router.get("/movies/{movie_id}/details", summary="Detailed accounting for one movie (Admin Only)", status_code=status.HTTP_200_OK)
 def detailed_accounting_by_movie(
     movie_id: int,
     start_from: Optional[datetime] = None,
@@ -72,7 +72,7 @@ def detailed_accounting_by_movie(
             detail="Invalid request: The start date is after the end date",
         ) from e
 
-@accounting_router.get("/period", status_code=status.HTTP_200_OK)
+@accounting_router.get("/period", summary="Get accounting by period (Admin Only)", status_code=status.HTTP_200_OK)
 def get_accounting_by_period(
     start_from: datetime,
     end_at: datetime,
