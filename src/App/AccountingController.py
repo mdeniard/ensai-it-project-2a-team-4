@@ -2,7 +2,7 @@ from typing_extensions import Optional
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import HTTPAuthorizationCredentials
 
 from src.Service.AccountingService import AccountingService
@@ -15,14 +15,15 @@ accounting_router = APIRouter(prefix="/accounting", tags=["Accounting"])
 # All the routes of this controller require to be logged in (JWTBearer):
 # in the Swagger, log in with POST /users/jwt, then paste the token in "Authorize"
 
-@accounting_router.get("/movies/{movie_id}?start_from=&end_at=", status_code=status.HTTP_200_OK)
+@accounting_router.get("/movies/{movie_id}", status_code=status.HTTP_200_OK)
 def get_accounting_by_movie(
     movie_id: int,
     start_from: Optional[datetime] = None,
     end_at: Optional[datetime] = None
 ):
     """
-    Get one of my reservations by its id
+    Get the revenue and the number of tickets sold for a movie,
+    optionally between two dates.
     """
     try:
         accounting = AccountingService().get_accounting_by_movie(movie_id, start_from, end_at)
@@ -36,16 +37,17 @@ def get_accounting_by_movie(
         raise HTTPException(
             status_code=400,
             detail="Invalid request: The start date is after the end date",
-        ) from FileNotFoundError
+        ) from ValueError
 
-@accounting_router.get("/movies/{movie_id}/details?start_from=&end_at=", status_code=status.HTTP_200_OK)
+@accounting_router.get("/movies/{movie_id}/details", status_code=status.HTTP_200_OK)
 def detailed_accounting_by_movie(
     movie_id: int,
     start_from: Optional[datetime] = None,
     end_at: Optional[datetime] = None
 ):
     """
-    Get one of my reservations by its id
+    Get the revenue and the number of tickets sold for a movie,
+    optionally between two dates.
     """
     try:
         accounting = AccountingService().detailed_accounting_by_movie(movie_id, start_from, end_at)
@@ -59,16 +61,18 @@ def detailed_accounting_by_movie(
         raise HTTPException(
             status_code=400,
             detail="Invalid request: The start date is after the end date",
-        ) from FileNotFoundError
+        ) from ValueError
 
-@accounting_router.get("/period?start_from=&end_at=&movie1=&movie2=", status_code=status.HTTP_200_OK)
+@accounting_router.get("/period", status_code=status.HTTP_200_OK)
 def get_accounting_by_period(
     start_from: datetime,
     end_at: datetime,
-    movies: Optional[list[int]]= None
+    movies: Annotated[Optional[list[int]], Query()]= None
 ):
     """
-    Get accounting by period
+    Get the accounting of several movies over a period.
+    Without `movies`, all the movies currently screened are included.
+    Example: /accounting/period?start_from=...&end_at=...&movies=1&movies=2
     """
     try:
         accounting = AccountingService().get_accounting_by_period(start_from, end_at, movies)
@@ -82,4 +86,4 @@ def get_accounting_by_period(
         raise HTTPException(
             status_code=400,
             detail="Invalid request: The start date is after the end date",
-        ) from FileNotFoundError
+        ) from ValueError
