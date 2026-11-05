@@ -6,7 +6,7 @@ from src.DAO.MovieRepo import MovieRepo
 from src.DAO.ReservationRepo import ReservationRepo
 
 
-class AccoutingService:
+class AccountingService:
     """Class that manages accouting"""
     def __init__(
         self,

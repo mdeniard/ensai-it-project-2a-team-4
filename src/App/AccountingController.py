@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 
-from src.Service.AccountingService import AccoutingService
+from src.Service.AccountingService import AccountingService
 
 from .JWTBearer import JWTBearer
 from .UserController import get_user_from_credentials
@@ -25,7 +25,7 @@ def get_accounting_by_movie(
     Get one of my reservations by its id
     """
     try:
-        accounting = AccoutingService().get_accounting_by_movie(movie_id, start_from, end_at)
+        accounting = AccountingService().get_accounting_by_movie(movie_id, start_from, end_at)
         return accounting
     except LookupError as e:
         raise HTTPException(
@@ -48,7 +48,7 @@ def detailed_accounting_by_movie(
     Get one of my reservations by its id
     """
     try:
-        accounting = AccoutingService().detailed_accounting_by_movie(movie_id, start_from, end_at)
+        accounting = AccountingService().detailed_accounting_by_movie(movie_id, start_from, end_at)
         return accounting
     except LookupError as e:
         raise HTTPException(
@@ -71,7 +71,7 @@ def get_accounting_by_period(
     Get accounting by period
     """
     try:
-        accounting = AccoutingService().get_accounting_by_period(start_from, end_at, movies)
+        accounting = AccountingService().get_accounting_by_period(start_from, end_at, movies)
         return accounting
     except LookupError as e:
         raise HTTPException(
