@@ -1,19 +1,30 @@
-from typing import Annotated, Optional
-
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials
 
-from src.App.JWTBearer import JWTBearer
-from src.App.UserController import get_admin_from_credentials, get_user_from_credentials
+from src.App.UserController import require_admin
 from src.Business_object.Room import Room
 from src.Model.RoomModel import RoomModel
 from src.Service.RoomService import RoomService
 
 room_router = APIRouter(prefix="/rooms", tags=["Rooms"])
 
+admin_room_router = APIRouter(
+    prefix="/admin/rooms",
+    tags=["Rooms"],
+    dependencies=[Depends(require_admin)],
+)
+
+
+# ---------- Public routes ----------
 
 @room_router.get("/{id}", summary="Get room by id", status_code=status.HTTP_200_OK)
 def get_room_by_id(id: int):
+    """
+    Get a room of the theater.
+
+    Args:
+
+    * id: the id of the room in our database (not its room number)
+    """
     try:
         room = RoomService().get_by_id(id)
         return room
@@ -27,19 +38,30 @@ def get_room_by_id(id: int):
 
 @room_router.get("/", summary="Get all room", status_code=status.HTTP_200_OK)
 def get_all_rooms():
+    """
+    Get all the rooms of the theater, with their room number and capacity.
+    """
     try:
         rooms = RoomService().get_all()
         return rooms
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid request") from e
 
-@room_router.post("/", summary="Create a room (Admin Only)", status_code=status.HTTP_201_CREATED)
+
+# ---------- Admin routes ----------
+
+@admin_room_router.post("/", summary="Create a room", status_code=status.HTTP_201_CREATED)
 def create(
     r: RoomModel,
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
     ):
+    """
+    Create a room. The room number must be unique and the capacity must be greater than 0.
+
+    Args:
+
+    * r: the room_number and the capacity (number of seats) of the room
+    """
     try:
-        get_admin_from_credentials(credentials)
         created_room = RoomService().create_room(
             Room(r.room_number, r.capacity)
         )
@@ -50,14 +72,20 @@ def create(
             detail=f"Error while creating room: {str(e)}"
         ) from e
 
-@room_router.put("/{id}", summary="Update a room (Admin Only)", status_code=status.HTTP_200_OK)
+@admin_room_router.put("/{id}", summary="Update a room", status_code=status.HTTP_200_OK)
 def update_room(
     id: int,
     r: RoomModel,
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
     ):
+    """
+    Update the room number and the capacity of a room.
+
+    Args:
+
+    * id: the id of the room in our database
+    * r: the new room_number and capacity of the room
+    """
     try:
-        get_admin_from_credentials(credentials)
         existing_room = RoomService().get_by_id(id)
         if existing_room is None:
             raise HTTPException(
@@ -81,14 +109,18 @@ def update_room(
 
 
 # --- Route de Suppression (DELETE) ---
-@room_router.delete("/{id}", summary="Delete a room (Admin Only)", status_code=status.HTTP_204_NO_CONTENT)
+@admin_room_router.delete("/{id}", summary="Delete a room", status_code=status.HTTP_204_NO_CONTENT)
 def delete_room(
     id: int,
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
     confirm: bool = False,
     ):
     """
-    Delete a room by its id and screenings related to this room
+    Delete a room, with all its screenings and their reservations.
+
+    Args:
+
+    * id: the id of the room in our database
+    * confirm: must be true to confirm the deletion (default false, the request is then refused)
     """
     if not confirm:
         raise HTTPException(
@@ -96,7 +128,6 @@ def delete_room(
             detail="Confirmation required: repeat the request with confirm=True",
         )
     try:
-        get_admin_from_credentials(credentials)
         existing_room = RoomService().get_by_id(id)
         if existing_room is None:
             raise HTTPException(

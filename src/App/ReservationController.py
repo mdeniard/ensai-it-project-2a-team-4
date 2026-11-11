@@ -16,13 +16,20 @@ reservation_router = APIRouter(prefix="/reservations", tags=["Reservations"])
 # in the Swagger, log in with POST /users/jwt, then paste the token in "Authorize"
 
 
-@reservation_router.post("/", status_code=status.HTTP_201_CREATED)
+@reservation_router.post("/", summary="Book a ticket", status_code=status.HTTP_201_CREATED)
 def create_reservation(
     r: ReservationModel,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
 ):
     """
-    Book one ticket for a screening (logged-in users only)
+    Book one ticket for a screening. The customer is the logged-in user.
+    The price paid = base price of the screening x price_multiplier of the ticket type.
+    Refused if the screening or the ticket type does not exist (404),
+    if the screening has already started, the ticket type is not active or the room is full (409).
+
+    Args:
+
+    * r: the screening_id and the ticket_type_id (the active ticket types are listed by GET /ticket-types)
     """
     # The customer is the logged-in user: we find him with the token,
     # so that nobody can book in the name of somebody else
@@ -45,24 +52,29 @@ def create_reservation(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
 
 
-@reservation_router.get("/me", status_code=status.HTTP_200_OK)
+@reservation_router.get("/me", summary="Get my reservations", status_code=status.HTTP_200_OK)
 def get_my_reservations(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
 ):
     """
-    List the reservations of the logged-in user
+    List all the reservations of the logged-in user, with the price paid for each ticket.
     """
     current_user = get_user_from_credentials(credentials)
     return ReservationService().get_customer_reservation(current_user.id)
 
 
-@reservation_router.get("/{reservation_id}", status_code=status.HTTP_200_OK)
+@reservation_router.get("/{reservation_id}", summary="Get one of my reservations", status_code=status.HTTP_200_OK)
 def get_reservation_by_id(
     reservation_id: int,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
 ):
     """
-    Get one of my reservations by its id
+    Get one reservation of the logged-in user.
+    A reservation of another customer is answered as not found (404).
+
+    Args:
+
+    * reservation_id: the id of the reservation
     """
     current_user = get_user_from_credentials(credentials)
     reservation = ReservationService().get_by_id(reservation_id)

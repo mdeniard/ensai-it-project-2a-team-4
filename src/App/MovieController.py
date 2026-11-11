@@ -1,27 +1,76 @@
-from typing import Optional, Annotated
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials
 
 from src.Business_object.Movie import Movie
 from src.Model.MovieModel import MovieModel
 from src.Service.MovieService import MovieService
-from src.App.UserController import get_admin_from_credentials
-from src.App.UserController import get_user_from_credentials
+from src.App.UserController import require_admin
 
 movie_router = APIRouter(prefix="/movies", tags=["Movies"])
-from .JWTBearer import JWTBearer
 
-@movie_router.get("/search", summary="Search movies on TMDB (Admin Only)",status_code=status.HTTP_200_OK)
-def search_movies_on_tmdb(
-    title: str,
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
-    year: Optional[int] = None,
-    ):
-    """Search movies on TMDB by title (and optionally by year).
-    The administrator uses the result to choose which movie to import. (Admin Only)
+admin_movie_router = APIRouter(
+    prefix="/admin/movies",
+    tags=["Movies"],
+    dependencies=[Depends(require_admin)],
+)
+
+
+# ---------- Public routes ----------
+
+@movie_router.get("/{tmdb_id}", summary="Get movie by id", status_code=status.HTTP_200_OK)
+def get_movie_by_id(tmdb_id: int):
+    """
+    Get a movie of the theater database.
+
+    Args:
+
+    * tmdb_id: the id of the movie in our database (not the TMDB id)
     """
     try:
-        get_admin_from_credentials(credentials)
+        my_movie = MovieService().get_by_id(tmdb_id)
+        return my_movie
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Movie with id [{}] not found".format(tmdb_id),
+        ) from FileNotFoundError
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid request") from Exception
+
+@movie_router.get("/", summary="Get screening movies", status_code=status.HTTP_200_OK)
+def get_screening_movies():
+    """
+    Get all the movies of the theater database.
+    """
+    try:
+        screening_movies = MovieService().get_screening_movies()
+        return screening_movies
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail="Movie not found",
+        ) from FileNotFoundError
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid request") from Exception
+
+
+# ---------- Admin routes ----------
+
+@admin_movie_router.get("/search", summary="Search movies on TMDB", status_code=status.HTTP_200_OK)
+def search_movies_on_tmdb(
+    title: str,
+    year: Optional[int] = None,
+    ):
+    """
+    Search movies on TMDB. The administrator uses the result to choose which movie to import.
+
+    Args:
+
+    * title: the title (or part of the title) of the movie, must not be empty
+    * year: the release year, to reduce ambiguity (optional)
+    """
+    try:
         movies_found = MovieService().search_tmdb(title, year)
         return movies_found
     except ValueError as e:
@@ -35,13 +84,19 @@ def search_movies_on_tmdb(
         ) from e
 
 
-@movie_router.post("/import/{tmdb_id}", summary="Import movies from TMDB (Admin Only)", status_code=status.HTTP_201_CREATED)
+@admin_movie_router.post("/import/{tmdb_id}", summary="Import a movie from TMDB", status_code=status.HTTP_201_CREATED)
 def import_movie_from_tmdb(
     tmdb_id: int,
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],):
-    """Get a movie from TMDB with its tmdb_id and save it in our database. (Admin Only)"""
+    ):
+    """
+    Get a movie from TMDB and save it in our database.
+    Refused (409) if the movie is already in the catalogue.
+
+    Args:
+
+    * tmdb_id: the TMDB id of the movie to import (found with the search route)
+    """
     try:
-        get_admin_from_credentials(credentials)
         imported_movie = MovieService().import_from_tmdb(tmdb_id)
     except ValueError as e:
         # The movie is already in our catalogue
@@ -63,44 +118,18 @@ def import_movie_from_tmdb(
     return imported_movie
 
 
-@movie_router.get("/{tmdb_id}", summary="Get movie by id", status_code=status.HTTP_200_OK)
-def get_movie_by_id(tmdb_id: int):
-    """Get a movie from the theater database using its id."""
-    try:
-        my_movie = MovieService().get_by_id(tmdb_id)
-        return my_movie
-    except FileNotFoundError:
-        raise HTTPException(
-            status_code=404,
-            detail="Movie with id [{}] not found".format(tmdb_id),
-        ) from FileNotFoundError
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid request") from Exception
-
-@movie_router.get("/", summary="Get screening movies", status_code=status.HTTP_200_OK)
-def get_screening_movies():
-    """Get all movie from the theater database."""
-    try:
-        screening_movies = MovieService().get_screening_movies()
-        return screening_movies
-    except FileNotFoundError:
-        raise HTTPException(
-            status_code=404,
-            detail="Movie not found",
-        ) from FileNotFoundError
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid request") from Exception
-
-@movie_router.post("/", summary="Create a movie (Admin Only)", status_code=status.HTTP_201_CREATED)
+@admin_movie_router.post("/", summary="Create a movie", status_code=status.HTTP_201_CREATED)
 def create_movie(
     m: MovieModel,
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
     ):
     """
-    Create a movie (admin only)
+    Create a movie by giving all its data by hand (to get it from TMDB, use the import route).
+
+    Args:
+
+    * m: the data of the movie (tmdb_id, title, description, duration, released_date, rating, poster_url)
     """
     try:
-        get_admin_from_credentials(credentials)
         created_movie = MovieService().create_movie(
             Movie(m.tmdb_id,
             m.title,
@@ -117,17 +146,20 @@ def create_movie(
             detail=f"Error while creating movie: {str(e)}"
         ) from e
 
-@movie_router.put("/{movie_id}", summary="Update a movie (Admin Only)", status_code=status.HTTP_200_OK)
+@admin_movie_router.put("/{movie_id}", summary="Update a movie", status_code=status.HTTP_200_OK)
 def update_movie(
     movie_id: int,
     m: MovieModel,
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
     ):
     """
-    Update a movie by its id (Admin Only)
+    Update a movie of the theater database.
+
+    Args:
+
+    * movie_id: the id of the movie in our database
+    * m: the new data of the movie (tmdb_id, title, description, duration, released_date, rating, poster_url)
     """
     try:
-        get_admin_from_credentials(credentials)
         updated_movie = MovieService().update_movie(
             Movie(m.tmdb_id,
             m.title,
@@ -154,14 +186,18 @@ def update_movie(
             detail=f"Error while updating movie: {str(e)}"
         ) from e
 
-@movie_router.delete("/{movie_id}", summary="Delete a movie (Admin Only)", status_code=status.HTTP_200_OK)
+@admin_movie_router.delete("/{movie_id}", summary="Delete a movie", status_code=status.HTTP_200_OK)
 def delete_movie(
     movie_id: int,
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
     confirm: bool = False,
     ):
     """
-    Delete a movie by its id and all linked entities (Admin Only)
+    Delete a movie, with all its screenings and their reservations.
+
+    Args:
+
+    * movie_id: the id of the movie in our database
+    * confirm: must be true to confirm the deletion (default false, the request is then refused)
     """
     if not confirm:
         raise HTTPException(
@@ -169,7 +205,6 @@ def delete_movie(
             detail="Confirmation required: repeat the request with confirm=True",
         )
     try:
-        get_admin_from_credentials(credentials)
         is_deleted = MovieService().delete_movie(movie_id)
         if not is_deleted:
             raise HTTPException(

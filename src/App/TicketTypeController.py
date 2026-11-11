@@ -1,9 +1,18 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
+from src.App.UserController import require_admin
 from src.Service.TicketTypeService import TicketTypeService
 
 ticket_type_router = APIRouter(prefix="/ticket-types", tags=["Ticket types"])
 
+admin_ticket_type_router = APIRouter(
+    prefix="/admin/ticket-types",
+    tags=["Ticket types"],
+    dependencies=[Depends(require_admin)],
+)
+
+
+# ---------- Public routes ----------
 
 @ticket_type_router.get("/", summary="Get the ticket types available for booking", status_code=status.HTTP_200_OK)
 def get_active_ticket_types():

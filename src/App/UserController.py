@@ -18,12 +18,41 @@ from .JWTBearer import JWTBearer
 if TYPE_CHECKING:
     from src.Model.User import User
 
+def get_user_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIUser:
+    token = credentials.credentials
+    user_id = int(jwt_service.validate_user_jwt(token))
+    user: User | None = user_repo.get_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return APIUser(id=user.id, username=user.username)
+
+def get_admin_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIUser:
+    token = credentials.credentials
+    user_id = int(jwt_service.validate_user_jwt(token))
+    user: User | None = user_repo.get_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+    return APIUser(id=user.id, username=user.username)
+
+def require_admin(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
+) -> APIUser:
+    return get_admin_from_credentials(credentials)
+
 user_router = APIRouter(prefix="/users", tags=["Users"])
+
+admin_user_router = APIRouter(
+    prefix="/admin/users",
+    tags=["Users"],
+    dependencies=[Depends(require_admin)],
+)
 
 @user_router.post("/", summary="Create a user", status_code=status.HTTP_201_CREATED)
 def create_user(u: UserModel) -> APIUser:
     """
-    Register a new user (password must have a lenght >= 8)
+    Register a new user. The username must be unique and the password must have a length >= 8.
     """
     try:
         check_password_strength(password=u.password)
@@ -38,6 +67,15 @@ def create_user(u: UserModel) -> APIUser:
 
 @user_router.post("/jwt", summary="Login", status_code=status.HTTP_200_OK)
 def login(username: str, password: str) -> JWTResponse:
+    """
+    Log in and get a JWT access token, valid for 10 minutes.
+    Use this token in the "Authorize" button, or in the Authorization header (Bearer) of the other routes.
+
+    Args:
+
+    * username: the username of the account
+    * password: the password of the account
+    """
     try:
         user = validate_username_password(username, password, user_repo)
     except UnknownUsernameError as error:
@@ -55,15 +93,14 @@ def login(username: str, password: str) -> JWTResponse:
 
     return jwt_service.encode_jwt(user.id)
 
-@user_router.get("/", summary="List users")
+@admin_user_router.get("/", summary="List users")
 def list_users(
     credentials: Annotated[HTTPAuthorizationCredentials,
     Depends(JWTBearer())]
 ) -> list[APIUser]:
     """
-    List all users (admin only)
+    List all the users.
     """
-    get_admin_from_credentials(credentials)
     users = user_service.get_all()
     return [APIUser(id=u.id, username=u.username) for u in users]
 
@@ -73,7 +110,11 @@ def update_own_profile(
     credentials: Annotated[HTTPAuthorizationCredentials,
     Depends(JWTBearer())]) -> APIUser:
     """
-    Update the authenticated user's profile
+    Update the profile of the logged-in user.
+
+    Args:
+
+    * u: the new data (username and email are required, first_name and last_name are optional)
     """
     current_user = get_user_from_credentials(credentials)
     try:
@@ -96,6 +137,13 @@ def change_own_password(
     m: ChangeUserPasswordModel,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
 ) -> None:
+    """
+    Change the password of the logged-in user. The current password must be given, and the new one must have a length >= 8.
+
+    Args:
+
+    * m: the current password (old_password) and the new password (new_password)
+    """
     current_user = get_user_from_credentials(credentials)
     try:
         user_service.change_password(current_user.id, m.old_password, m.new_password)
@@ -111,7 +159,11 @@ def delete_own_profile(
     confirm: bool = False,
     ) -> None:
     """
-    Delete the authenticated user's profile
+    Delete the profile of the logged-in user, with all his reservations.
+
+    Args:
+
+    * confirm: must be true to confirm the deletion (default false, the request is then refused)
     """
     if not confirm:
         raise HTTPException(
@@ -130,7 +182,7 @@ def delete_own_profile(
 @user_router.get("/me", summary="Get user own profile", dependencies=[Depends(JWTBearer())])
 def get_user_own_profile(credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())]) -> APIUser:
     """
-    Get the authenticated user profile
+    Get the profile (id and username) of the logged-in user.
     """
     return get_user_from_credentials(credentials)
 
