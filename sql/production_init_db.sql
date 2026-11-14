@@ -224,3 +224,15 @@ WHERE NOT EXISTS (
       AND re.ticket_type_id = tt.id
       AND re.reserved_at  = v.reserved_at
 );
+
+-- Reviews --------------------------------
+CREATE TABLE IF NOT EXISTS reviews (
+    id          SERIAL PRIMARY KEY,
+    customer_id INT NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+    movie_id    INT NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
+    rating      SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 10),
+    comment     TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    -- one review per customer and per movie
+    UNIQUE (customer_id, movie_id)
+);

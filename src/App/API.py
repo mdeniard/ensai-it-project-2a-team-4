@@ -9,6 +9,7 @@ from .ScreeningController import screening_router,admin_screening_router
 from .ReservationController import reservation_router
 from .AccountingController import admin_accounting_router
 from .TicketTypeController import ticket_type_router
+from .ReviewController import review_router, admin_review_router
 
 def run_app():
     app = FastAPI(title="Projet Info 2A", description="Example project for ENSAI students")
@@ -30,6 +31,10 @@ def run_app():
     app.include_router(admin_room_router)
 
     app.include_router(reservation_router)
+
+    app.include_router(review_router)
+
+    app.include_router(admin_review_router)
 
     app.include_router(admin_accounting_router)
 
