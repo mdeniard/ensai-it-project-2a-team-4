@@ -19,44 +19,33 @@ class MovieRepo:
         Returns:
             The Movie instance, or None if not found.
         """
-        raw_movie = self.db_connector.sql_query(
-            "SELECT * FROM movies WHERE tmdb_id = %s;",
-            [tmdb_id],
-            "one"
-        )
+        raw_movie = self.db_connector.sql_query("SELECT * FROM movies WHERE tmdb_id = %s;", [tmdb_id], "one")
         if raw_movie is None:
             return None
         return Movie(**raw_movie)
 
     def get_by_id(self, id: int) -> Optional[Movie]:
         """Retrieve a movie by database identifier.
-        Args: 
-            id: the unique database id for the movie. 
-        
-        Returns: 
+        Args:
+            id: the unique database id for the movie.
+
+        Returns:
             The movie instance, or None if not found.
         """
-        raw_movie = self.db_connector.sql_query(
-            "SELECT * FROM movies WHERE id = %s;",
-            [id],
-            "one"
-        )
+        raw_movie = self.db_connector.sql_query("SELECT * FROM movies WHERE id = %s;", [id], "one")
         if raw_movie is None:
             return None
         return Movie(**raw_movie)
 
     def get_screening_movies(self) -> Optional[Movie]:
         """Retrieve all screening movies from the database.
-        
-        Returns: 
+
+        Returns:
             A list of movie instances, or an empty list of none found.
-        """ 
-        raw_movies = self.db_connector.sql_query(
-            "SELECT * FROM movies;",
-            return_type="all"
-        )
+        """
+        raw_movies = self.db_connector.sql_query("SELECT * FROM movies;", return_type="all")
         if not raw_movies:
-                    return []
+            return []
 
         return [Movie(**movie_data) for movie_data in raw_movies]
 

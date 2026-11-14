@@ -5,14 +5,15 @@ from src.DAO.TicketTypeRepo import TicketTypeRepo
 from src.Service.TicketTypeService import TicketTypeService
 
 
-def make_student(id = 1) -> TicketType:
+def make_student(id=1) -> TicketType:
     """Create the TicketType object used in the tests."""
     return TicketType(
-        id= id,
-        name= "Student",
-        price_multiplier= 0.7,
-        active= True,
+        id=id,
+        name="Student",
+        price_multiplier=0.7,
+        active=True,
     )
+
 
 class MockDBConnector:
     """Fake DBConnector.
@@ -32,6 +33,7 @@ class MockDBConnector:
         # Return the prepared answer
         return self.answer
 
+
 # A row of the ticket_type table, as PostgreSQL would return it
 STUDENT_ROW = {
     "id": 1,
@@ -46,6 +48,7 @@ NORMAL_ROW = {
     "active": True,
 }
 
+
 def test_get_by_id_found():
     # GIVEN the database contains the Student ticket type
     db_connector = MockDBConnector(STUDENT_ROW)
@@ -59,11 +62,11 @@ def test_get_by_id_found():
     assert ticket_type is not None
     assert ticket_type.name == "Student"
 
+
 def test_get_by_id_not_found():
     # GIVEN the database finds nothing
     ticket_type_repo = TicketTypeRepo(MockDBConnector(None))
     ticket_type_service = TicketTypeService(ticket_type_repo)
-
 
     # WHEN we search a ticket type / THEN we get None
     assert ticket_type_service.get_by_id(42) is None
@@ -76,7 +79,6 @@ def test_get_all_several_ticket_type():
     # GIVEN the database contains two ticket types
     ticket_type_repo = TicketTypeRepo(MockDBConnector([STUDENT_ROW, NORMAL_ROW]))
     ticket_type_service = TicketTypeService(ticket_type_repo)
-
 
     # WHEN we list the movies
     ticket_types = ticket_type_service.get_all_ticket_types()
@@ -91,7 +93,6 @@ def test_get_screening_movies_no_ticket_type():
     # GIVEN the ticket_types table is empty (PostgreSQL returns an empty list)
     ticket_type_repo = TicketTypeRepo(MockDBConnector([]))
     ticket_type_service = TicketTypeService(ticket_type_repo)
-
 
     # WHEN we list the ticket types / THEN we get an empty list
     assert ticket_type_service.get_all_ticket_types() == []
@@ -133,7 +134,6 @@ def test_insert_ticket_type():
     ticket_type_repo = TicketTypeRepo(db_connector)
     ticket_type_service = TicketTypeService(ticket_type_repo)
 
-
     # WHEN we save it
     created_ticket_type = ticket_type_service.create_ticket_type(TicketType("Student", 0.7, True, id=1))
 
@@ -157,7 +157,6 @@ def test_update_found():
     ticket_type_repo = TicketTypeRepo(db_connector)
     ticket_type_service = TicketTypeService(ticket_type_repo)
 
-
     ticket_type_to_update: TicketType = make_student()
     ticket_type_to_update.name = "ENSAI_Student"
 
@@ -177,7 +176,6 @@ def test_update_not_found():
     ticket_type_repo = TicketTypeRepo(MockDBConnector(None))
     ticket_type_service = TicketTypeService(ticket_type_repo)
 
-
     # WHEN we update it / THEN we get None
     assert ticket_type_service.update_ticket_type(make_student(id=42)) is None
 
@@ -191,7 +189,6 @@ def test_delete_found():
     ticket_type_repo = TicketTypeRepo(db_connector)
     ticket_type_service = TicketTypeService(ticket_type_repo)
 
-
     # WHEN we delete it / THEN we get True
     assert ticket_type_service.delete_ticket_type(1) is True
     # AND the repo sent a DELETE for the right ticket type
@@ -203,7 +200,6 @@ def test_delete_not_found():
     # GIVEN the ticket type does not exist (no row deleted, nothing returned)
     ticket_type_repo = TicketTypeRepo(MockDBConnector(None))
     ticket_type_service = TicketTypeService(ticket_type_repo)
-
 
     # WHEN we delete it / THEN we get False
     assert ticket_type_service.delete_ticket_type(42) is False

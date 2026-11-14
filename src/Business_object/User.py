@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 
-class User():
+class User:
     def __init__(
         self,
         username: str,
@@ -12,7 +12,7 @@ class User():
         last_name: str,
         is_admin: bool = False,
         salt: str = "",
-        id: Optional[int] = None
+        id: Optional[int] = None,
     ):
         self.id = id
         self.username = username
@@ -25,7 +25,4 @@ class User():
 
     def __str__(self) -> str:
         role = "Admin" if self.is_admin else "User"
-        return (
-            f"User #{self.id}: {self.first_name} {self.last_name} "
-            f"(@{self.username} - {self.email}) [{role}]"
-        )
+        return f"User #{self.id}: {self.first_name} {self.last_name} (@{self.username} - {self.email}) [{role}]"

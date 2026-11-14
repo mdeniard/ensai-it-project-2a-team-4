@@ -14,16 +14,15 @@ class TicketTypeService:
         # Access to our own database (table ticket_types)
         self.ticket_type_repo: TicketTypeRepo = ticket_type_repo or TicketTypeRepo()
 
-    def get_by_id(self, ticket_type_id)-> Optional[TicketType]:
+    def get_by_id(self, ticket_type_id) -> Optional[TicketType]:
         """Get the ticket type with the id
         Args:
             ticket_type_id : id of the wanted ticket type
         """
         return self.ticket_type_repo.get_by_id(ticket_type_id)
 
-    def get_all_ticket_types(self)-> list[TicketType]:
-        """Get all ticket types
-        """
+    def get_all_ticket_types(self) -> list[TicketType]:
+        """Get all ticket types"""
         return self.ticket_type_repo.get_all()
 
     def get_active_ticket_types(self) -> list[TicketType]:
@@ -38,21 +37,21 @@ class TicketTypeService:
                 active_ticket_types.append(ticket_type)  # noqa: PERF401 (a simple loop is easier to read here)
         return active_ticket_types
 
-    def create_ticket_type(self, ticket_type: TicketType) ->TicketType:
+    def create_ticket_type(self, ticket_type: TicketType) -> TicketType:
         """Create a ticket type
         Args:
             ticket_type : data concerning the ticket type
         """
         return self.ticket_type_repo.insert_ticket_type(ticket_type)
 
-    def update_ticket_type(self, ticket_type: TicketType)-> Optional[TicketType]:
+    def update_ticket_type(self, ticket_type: TicketType) -> Optional[TicketType]:
         """Update a ticket type
         Args:
             ticket_type : new data concerning the ticket type
         """
         return self.ticket_type_repo.update_ticket_type(ticket_type)
 
-    def delete_ticket_type(self, ticket_type_id: int)-> bool:
+    def delete_ticket_type(self, ticket_type_id: int) -> bool:
         """Delete a ticket type
         Args:
             ticket_type_id : the id of the ticket type we wish to delete

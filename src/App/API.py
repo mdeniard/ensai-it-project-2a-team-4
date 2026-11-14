@@ -5,11 +5,12 @@ from fastapi.responses import RedirectResponse
 from .MovieController import movie_router, admin_movie_router
 from .UserController import user_router, admin_user_router
 from .RoomController import room_router, admin_room_router
-from .ScreeningController import screening_router,admin_screening_router
+from .ScreeningController import screening_router, admin_screening_router
 from .ReservationController import reservation_router
 from .AccountingController import admin_accounting_router
 from .TicketTypeController import ticket_type_router
 from .ReviewController import review_router, admin_review_router
+
 
 def run_app():
     app = FastAPI(title="Projet Info 2A", description="Example project for ENSAI students")

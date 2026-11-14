@@ -20,6 +20,7 @@ class MockDBConnector:
         # Return the prepared answer
         return self.answer
 
+
 # A row of the ticket_type table, as PostgreSQL would return it
 STUDENT_ROW = {
     "id": 1,
@@ -34,14 +35,16 @@ NORMAL_ROW = {
     "active": True,
 }
 
-def make_student(id = 1) -> TicketType:
+
+def make_student(id=1) -> TicketType:
     """Create the TicketType object used in the tests."""
     return TicketType(
-        id= id,
-        name= "Student",
-        price_multiplier= 0.7,
-        active= True,
+        id=id,
+        name="Student",
+        price_multiplier=0.7,
+        active=True,
     )
+
 
 # ---------- get_by_id ----------
 
@@ -60,6 +63,7 @@ def test_get_by_id_found():
     # AND the repo searched with the id
     assert "WHERE id" in db_connector.last_query
     assert db_connector.last_data == [1]
+
 
 def test_get_by_id_not_found():
     # GIVEN the database finds nothing

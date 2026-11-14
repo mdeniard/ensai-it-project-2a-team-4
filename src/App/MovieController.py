@@ -18,6 +18,7 @@ admin_movie_router = APIRouter(
 
 # ---------- Public routes ----------
 
+
 @movie_router.get("/{tmdb_id}", summary="Get movie by id", status_code=status.HTTP_200_OK)
 def get_movie_by_id(tmdb_id: int):
     """
@@ -38,6 +39,7 @@ def get_movie_by_id(tmdb_id: int):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid request") from Exception
 
+
 @movie_router.get("/", summary="Get screening movies", status_code=status.HTTP_200_OK)
 def get_screening_movies():
     """
@@ -57,11 +59,12 @@ def get_screening_movies():
 
 # ---------- Admin routes ----------
 
+
 @admin_movie_router.get("/search", summary="Search movies on TMDB", status_code=status.HTTP_200_OK)
 def search_movies_on_tmdb(
     title: str,
     year: Optional[int] = None,
-    ):
+):
     """
     Search movies on TMDB. The administrator uses the result to choose which movie to import.
 
@@ -87,7 +90,7 @@ def search_movies_on_tmdb(
 @admin_movie_router.post("/import/{tmdb_id}", summary="Import a movie from TMDB", status_code=status.HTTP_201_CREATED)
 def import_movie_from_tmdb(
     tmdb_id: int,
-    ):
+):
     """
     Get a movie from TMDB and save it in our database.
     Refused (409) if the movie is already in the catalogue.
@@ -121,7 +124,7 @@ def import_movie_from_tmdb(
 @admin_movie_router.post("/", summary="Create a movie", status_code=status.HTTP_201_CREATED)
 def create_movie(
     m: MovieModel,
-    ):
+):
     """
     Create a movie by giving all its data by hand (to get it from TMDB, use the import route).
 
@@ -131,26 +134,20 @@ def create_movie(
     """
     try:
         created_movie = MovieService().create_movie(
-            Movie(m.tmdb_id,
-            m.title,
-            m.description,
-            m.duration,
-            m.released_date,
-            m.rating,
-            m.poster_url)
+            Movie(m.tmdb_id, m.title, m.description, m.duration, m.released_date, m.rating, m.poster_url)
         )
         return created_movie
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error while creating movie: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error while creating movie: {str(e)}"
         ) from e
+
 
 @admin_movie_router.put("/{movie_id}", summary="Update a movie", status_code=status.HTTP_200_OK)
 def update_movie(
     movie_id: int,
     m: MovieModel,
-    ):
+):
     """
     Update a movie of the theater database.
 
@@ -161,36 +158,26 @@ def update_movie(
     """
     try:
         updated_movie = MovieService().update_movie(
-            Movie(m.tmdb_id,
-            m.title,
-            m.description,
-            m.duration,
-            m.released_date,
-            m.rating,
-            m.poster_url,
-            id=movie_id)
+            Movie(m.tmdb_id, m.title, m.description, m.duration, m.released_date, m.rating, m.poster_url, id=movie_id)
         )
 
         if updated_movie is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Movie with id [{movie_id}] not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Movie with id [{movie_id}] not found")
 
         return updated_movie
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error while updating movie: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error while updating movie: {str(e)}"
         ) from e
+
 
 @admin_movie_router.delete("/{movie_id}", summary="Delete a movie", status_code=status.HTTP_200_OK)
 def delete_movie(
     movie_id: int,
     confirm: bool = False,
-    ):
+):
     """
     Delete a movie, with all its screenings and their reservations.
 
@@ -207,15 +194,11 @@ def delete_movie(
     try:
         is_deleted = MovieService().delete_movie(movie_id)
         if not is_deleted:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Movie with id [{movie_id}] not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Movie with id [{movie_id}] not found")
         return {"message": f"Movie with id [{movie_id}] successfully deleted"}
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error while deleting movie: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error while deleting movie: {str(e)}"
         ) from e

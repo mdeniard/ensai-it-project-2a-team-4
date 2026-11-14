@@ -21,6 +21,6 @@ class Screening:
         self.base_price = base_price
 
     def __str__(self) -> str:
-            start_str = self.start_time.strftime("%Y-%m-%d %H:%M")
-            end_str = self.end_time.strftime("%H:%M")
-            return f"Screening #{self.id} (Movie ID: {self.movie_id}, Room ID: {self.room_id}) : {start_str} -> {end_str}"
+        start_str = self.start_time.strftime("%Y-%m-%d %H:%M")
+        end_str = self.end_time.strftime("%H:%M")
+        return f"Screening #{self.id} (Movie ID: {self.movie_id}, Room ID: {self.room_id}) : {start_str} -> {end_str}"

@@ -9,11 +9,13 @@ class UserModel(BaseModel):
     first_name: str
     last_name: str
 
+
 class UpdateUserModel(BaseModel):
     username: str
     email: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+
 
 class ChangeUserPasswordModel(BaseModel):
     old_password: str

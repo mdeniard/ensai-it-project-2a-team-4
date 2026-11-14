@@ -17,11 +17,7 @@ admin_accounting_router = APIRouter(
 
 
 @admin_accounting_router.get("/movies/{movie_id}", summary="Get accounting by movie", status_code=status.HTTP_200_OK)
-def get_accounting_by_movie(
-    movie_id: int,
-    start_from: Optional[datetime] = None,
-    end_at: Optional[datetime] = None
-):
+def get_accounting_by_movie(movie_id: int, start_from: Optional[datetime] = None, end_at: Optional[datetime] = None):
     """
     Get the total revenue and the total number of tickets sold for a movie, over all its screenings.
     Only the reservations made between the two dates are counted.
@@ -46,11 +42,12 @@ def get_accounting_by_movie(
             detail="Invalid request: The start date is after the end date",
         ) from e
 
-@admin_accounting_router.get("/movies/{movie_id}/details", summary="Detailed accounting for one movie", status_code=status.HTTP_200_OK)
+
+@admin_accounting_router.get(
+    "/movies/{movie_id}/details", summary="Detailed accounting for one movie", status_code=status.HTTP_200_OK
+)
 def detailed_accounting_by_movie(
-    movie_id: int,
-    start_from: Optional[datetime] = None,
-    end_at: Optional[datetime] = None
+    movie_id: int, start_from: Optional[datetime] = None, end_at: Optional[datetime] = None
 ):
     """
     Get the revenue and the number of tickets sold for each screening of a movie.
@@ -76,11 +73,10 @@ def detailed_accounting_by_movie(
             detail="Invalid request: The start date is after the end date",
         ) from e
 
+
 @admin_accounting_router.get("/period", summary="Get accounting by period", status_code=status.HTTP_200_OK)
 def get_accounting_by_period(
-    start_from: datetime,
-    end_at: datetime,
-    movies: Annotated[Optional[list[int]], Query()]= None
+    start_from: datetime, end_at: datetime, movies: Annotated[Optional[list[int]], Query()] = None
 ):
     """
     Get the total revenue and the number of tickets sold for several movies over a period.

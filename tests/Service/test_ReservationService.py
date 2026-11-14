@@ -25,14 +25,32 @@ class MockScreeningRepo:
 
     def get_by_id(self, object_id):
         if object_id == 1:
-            return Screening(movie_id=1, room_id=1, start_time=NOW + timedelta(days=1),
-                             end_time=NOW + timedelta(days=1, hours=2), base_price=10.0, id=1)
+            return Screening(
+                movie_id=1,
+                room_id=1,
+                start_time=NOW + timedelta(days=1),
+                end_time=NOW + timedelta(days=1, hours=2),
+                base_price=10.0,
+                id=1,
+            )
         if object_id == 2:
-            return Screening(movie_id=1, room_id=1, start_time=NOW - timedelta(days=1),
-                             end_time=NOW - timedelta(hours=22), base_price=10.0, id=2)
+            return Screening(
+                movie_id=1,
+                room_id=1,
+                start_time=NOW - timedelta(days=1),
+                end_time=NOW - timedelta(hours=22),
+                base_price=10.0,
+                id=2,
+            )
         if object_id == 3:
-            return Screening(movie_id=1, room_id=1, start_time=NOW + timedelta(days=1),
-                             end_time=NOW + timedelta(days=1, hours=2), base_price=9.5, id=3)
+            return Screening(
+                movie_id=1,
+                room_id=1,
+                start_time=NOW + timedelta(days=1),
+                end_time=NOW + timedelta(days=1, hours=2),
+                base_price=9.5,
+                id=3,
+            )
         return None
 
 

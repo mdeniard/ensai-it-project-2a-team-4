@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from src.Business_object.Movie import Movie
 from src.Service.MovieService import MovieService

@@ -16,7 +16,4 @@ class TicketType:
 
     def __str__(self) -> str:
         status = "Active" if self.active else "Inactive"
-        return (
-            f"TicketType #{self.id}: {self.name} "
-            f"(Multiplier: {self.price_multiplier}x, Status: {status})"
-        )
+        return f"TicketType #{self.id}: {self.name} (Multiplier: {self.price_multiplier}x, Status: {status})"

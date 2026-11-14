@@ -21,12 +21,7 @@ class UserService:
         return self.user_repo.create_user(user)
 
     def update_user(
-        self,
-        user_id: int,
-        username: str,
-        email: str,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None
+        self, user_id: int, username: str, email: str, first_name: Optional[str] = None, last_name: Optional[str] = None
     ) -> User:
         existing_user = self.user_repo.get_by_id(user_id)
         if not existing_user:
@@ -55,10 +50,7 @@ class UserService:
         new_hash = hash_password(new_password, new_salt)
         self.user_repo.update_password(user_id, new_hash, new_salt)
 
-    def delete_user(
-        self,
-        user_id: int
-    ) -> bool:
+    def delete_user(self, user_id: int) -> bool:
         if not self.user_repo.get_by_id(user_id):
             raise ValueError("Utilisateur introuvable")
         return self.user_repo.delete_user(user_id)

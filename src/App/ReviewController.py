@@ -21,6 +21,7 @@ admin_review_router = APIRouter(
 
 # ---------- Public routes ----------
 
+
 @review_router.get("/movies/{movie_id}", summary="Get the reviews of a movie", status_code=status.HTTP_200_OK)
 def get_movie_reviews(movie_id: int):
     """
@@ -37,6 +38,7 @@ def get_movie_reviews(movie_id: int):
 
 
 # ---------- Customer routes (logged-in users) ----------
+
 
 @review_router.post("/", summary="Write a review", status_code=status.HTTP_201_CREATED)
 def create_review(
@@ -80,7 +82,9 @@ def get_my_reviews(
     return ReviewService().get_customer_reviews(current_user.id)
 
 
-@review_router.delete("/movies/{movie_id}", summary="Delete my review of a movie", status_code=status.HTTP_204_NO_CONTENT)
+@review_router.delete(
+    "/movies/{movie_id}", summary="Delete my review of a movie", status_code=status.HTTP_204_NO_CONTENT
+)
 def delete_my_review(
     movie_id: int,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
@@ -100,6 +104,7 @@ def delete_my_review(
 
 
 # ---------- Admin routes ----------
+
 
 @admin_review_router.delete("/{review_id}", summary="Delete any review", status_code=status.HTTP_204_NO_CONTENT)
 def delete_review(

@@ -24,9 +24,7 @@ class ScreeningService:
         self.movie_repo = movie_repo or MovieRepo()
         self.room_repo = room_repo or RoomRepo()
 
-    def filter_screenings(
-        self, movie_id: Optional[int] = None, day: Optional[date] = None
-    ) -> list[Screening]:
+    def filter_screenings(self, movie_id: Optional[int] = None, day: Optional[date] = None) -> list[Screening]:
         now = datetime.now(timezone.utc)
         start_from = now
 
@@ -40,9 +38,7 @@ class ScreeningService:
     def room_schedule(self, room_number: int) -> list[Screening]:
         return self.screening_repo.room_schedule(room_number)
 
-    def create_screening(
-        self, movie_id: int, room_id: int, start_time: datetime, base_price: float
-    ) -> Screening:
+    def create_screening(self, movie_id: int, room_id: int, start_time: datetime, base_price: float) -> Screening:
         # The base price of a ticket must be positive
         if base_price <= 0:
             raise ValueError("The base price must be greater than 0")

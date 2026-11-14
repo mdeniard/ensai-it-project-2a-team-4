@@ -29,8 +29,7 @@ class RoomService:
         return self.room_repo.get_by_number(room_number)
 
     def get_all(self) -> list[Room]:
-        """Get all rooms
-        """
+        """Get all rooms"""
         return self.room_repo.get_all()
 
     def create_room(self, room: Room) -> Optional[Room]:

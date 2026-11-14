@@ -12,20 +12,13 @@ class TicketTypeRepo:
         self.db_connector = db_connector or DBConnector()
 
     def get_by_id(self, id: int) -> Optional[TicketType]:
-        raw_ticket_type = self.db_connector.sql_query(
-            "SELECT * FROM ticket_types WHERE id = %s;",
-            [id],
-            "one"
-        )
+        raw_ticket_type = self.db_connector.sql_query("SELECT * FROM ticket_types WHERE id = %s;", [id], "one")
         if raw_ticket_type is None:
             return None
         return TicketType(**raw_ticket_type)
 
-    def get_all(self)-> list[TicketType]:
-        raw_ticket_type = self.db_connector.sql_query(
-            "SELECT * FROM ticket_types ORDER BY id;",
-            return_type="all"
-        )
+    def get_all(self) -> list[TicketType]:
+        raw_ticket_type = self.db_connector.sql_query("SELECT * FROM ticket_types ORDER BY id;", return_type="all")
         return [TicketType(**raw) for raw in raw_ticket_type or []]
 
     def insert_ticket_type(self, ticket_type: TicketType) -> TicketType:
@@ -68,7 +61,7 @@ class TicketTypeRepo:
 
         return TicketType(**raw_updated_ticket_type)
 
-    def delete_ticket_type(self, ticket_type_id)-> bool:
+    def delete_ticket_type(self, ticket_type_id) -> bool:
         deleted_ticket_type = self.db_connector.sql_query(
             """
             DELETE FROM ticket_types
@@ -79,4 +72,3 @@ class TicketTypeRepo:
             "one",
         )
         return deleted_ticket_type is not None
-

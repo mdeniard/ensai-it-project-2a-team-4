@@ -12,29 +12,20 @@ class ReservationRepo:
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:
         self.db_connector = db_connector or DBConnector()
 
-    def get_by_id(self, id)-> Optional[Reservation]:
-        raw_reservation = self.db_connector.sql_query(
-            "SELECT * FROM reservations WHERE id = %s;",
-            [id],
-            "one"
-        )
+    def get_by_id(self, id) -> Optional[Reservation]:
+        raw_reservation = self.db_connector.sql_query("SELECT * FROM reservations WHERE id = %s;", [id], "one")
         if raw_reservation is None:
             return None
         return Reservation(**raw_reservation)
 
-    def get_customer_reservations(self, customer_id)->list[Reservation]:
+    def get_customer_reservations(self, customer_id) -> list[Reservation]:
         raw_reservation = self.db_connector.sql_query(
-            "SELECT * FROM reservations WHERE customer_id = %s;",
-            [customer_id],
-            return_type="all"
+            "SELECT * FROM reservations WHERE customer_id = %s;", [customer_id], return_type="all"
         )
         return [Reservation(**raw) for raw in raw_reservation or []]
 
     def get_accounting_by_movie(
-        self,
-        movie_id: int,
-        start_from: Optional[datetime] = None,
-        end_at: Optional[datetime] = None
+        self, movie_id: int, start_from: Optional[datetime] = None, end_at: Optional[datetime] = None
     ):
         query = """
             SELECT
@@ -67,8 +58,7 @@ class ReservationRepo:
 
         return self.db_connector.sql_query(query, params, "all")
 
-
-    def create_reservation(self, reservation: Reservation)-> Reservation:
+    def create_reservation(self, reservation: Reservation) -> Reservation:
         raw = self.db_connector.sql_query(
             """
             INSERT INTO reservations (customer_id, screening_id, ticket_type_id, reserved_at, price_paid)
@@ -85,7 +75,6 @@ class ReservationRepo:
             "one",
         )
         return Reservation(**raw)
-
 
     def check_room_capacity_reservation(self, reservation: Reservation) -> bool:
         """Check if there is still at least one free seat for the screening of the reservation.

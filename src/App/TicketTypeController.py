@@ -14,6 +14,7 @@ admin_ticket_type_router = APIRouter(
 
 # ---------- Public routes ----------
 
+
 @ticket_type_router.get("/", summary="Get the ticket types available for booking", status_code=status.HTTP_200_OK)
 def get_active_ticket_types():
     """

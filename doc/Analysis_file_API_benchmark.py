@@ -65,11 +65,7 @@ def get_omdb_movie(title):
         "runtime": data.get("Runtime"),
         "genres": data.get("Genre"),
         "overview": data.get("Plot"),
-        "poster": (
-            data.get("Poster")
-            if data.get("Poster") != "N/A"
-            else None
-        ),
+        "poster": (data.get("Poster") if data.get("Poster") != "N/A" else None),
     }
 
     return movie, elapsed
@@ -125,10 +121,7 @@ def get_tmdb_movie(title):
         "title": data.get("title"),
         "year": data.get("release_date", "")[:4],
         "runtime": data.get("runtime"),
-        "genres": [
-            genre["name"]
-            for genre in data.get("genres", [])
-        ],
+        "genres": [genre["name"] for genre in data.get("genres", [])],
         "overview": data.get("overview"),
         "poster": poster,
     }
@@ -147,7 +140,6 @@ def benchmark_api(api_name, movie_function):
     overviews = 0
 
     for title in TEST_MOVIES:
-
         try:
             movie, elapsed = movie_function(title)
 
@@ -190,10 +182,7 @@ def benchmark_api(api_name, movie_function):
 def main():
 
     if not OMDB_API_KEY or not TMDB_API_KEY:
-        raise RuntimeError(
-            "Missing API keys. Set OMDB_API_KEY and TMDB_API_KEY "
-            "as environment variables."
-        )
+        raise RuntimeError("Missing API keys. Set OMDB_API_KEY and TMDB_API_KEY as environment variables.")
 
     omdb_time = benchmark_api("OMDb", get_omdb_movie)
     tmdb_time = benchmark_api("TMDB", get_tmdb_movie)

@@ -21,6 +21,7 @@ def check_password_strength(password: str):
     if len(password) < 8:
         raise Exception("Password length must be at least 8 characters")
 
+
 def compare_password(password, salt, hash):
     return hash_password(password, salt) == hash
 
@@ -28,11 +29,14 @@ def compare_password(password, salt, hash):
 class InvalidCredentialsError(Exception):
     """Base class for login failures"""
 
+
 class UnknownUsernameError(InvalidCredentialsError):
     """Username not found"""
 
+
 class WrongPasswordError(InvalidCredentialsError):
     """Password does not match"""
+
 
 def validate_username_password(username: str, password: str, user_repo: UserRepo) -> User:
     user = user_repo.get_by_username(username=username)

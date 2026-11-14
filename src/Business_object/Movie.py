@@ -11,7 +11,7 @@ class Movie:
         released_date: Optional[str],
         rating: Optional[float],
         poster_url: Optional[str],
-        id: Optional[int] = None
+        id: Optional[int] = None,
     ):
         self.id = id
         self.tmdb_id = tmdb_id
@@ -23,7 +23,4 @@ class Movie:
         self.poster_url = poster_url
 
     def __str__(self) -> str:
-        return (
-            f"Movie(id={self.id}, title='{self.title}', "
-            f"released_date='{self.released_date}', rating={self.rating})"
-        )
+        return f"Movie(id={self.id}, title='{self.title}', released_date='{self.released_date}', rating={self.rating})"

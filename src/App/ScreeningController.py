@@ -19,6 +19,7 @@ admin_screening_router = APIRouter(
 
 # ---------- Public routes ----------
 
+
 @screening_router.get("/rooms/{room_number}", summary="Get room Schedule", status_code=status.HTTP_200_OK)
 def get_room_schedule(room_number: int):
     """
@@ -29,6 +30,7 @@ def get_room_schedule(room_number: int):
     * room_number: the number of the room (not its database id)
     """
     return ScreeningService().room_schedule(room_number)
+
 
 @screening_router.get("/", summary="Get upcoming screenings", status_code=status.HTTP_200_OK)
 def get_upcoming_screenings(
@@ -47,6 +49,7 @@ def get_upcoming_screenings(
 
 
 # ---------- Admin routes ----------
+
 
 @admin_screening_router.post("/", summary="Create a screening", status_code=status.HTTP_201_CREATED)
 def create_screening(
@@ -67,6 +70,7 @@ def create_screening(
         raise HTTPException(status_code=404, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
+
 
 @admin_screening_router.delete("/{screening_id}", summary="Delete a screening", status_code=status.HTTP_204_NO_CONTENT)
 def delete_screening(
