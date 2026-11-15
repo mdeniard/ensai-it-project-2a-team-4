@@ -154,6 +154,30 @@ WHERE NOT EXISTS (
       AND s.start_time = (d.day + t.local_time) AT TIME ZONE 'Europe/Paris'
 );
 
+INSERT INTO screenings (movie_id, room_id, start_time, end_time, base_price)
+SELECT m.id,
+       r.id,
+       ((DATE '2026-10-29' + t.day_offset) + t.local_time) AT TIME ZONE 'Europe/Paris',
+       ((DATE '2026-10-29' + t.day_offset) + t.local_time) AT TIME ZONE 'Europe/Paris'
+           + (m.duration + 20) * INTERVAL '1 minute',
+       8.00
+FROM (VALUES
+    -- room_number, tmdb_id, day offset from October 29th, time (Paris)
+    (1, 1255833, 0, TIME '10:00'),  -- Whalefall
+    (2, 1507877, 0, TIME '10:00'),  -- Another Day
+    (3, 1263337, 0, TIME '10:30'),  -- Heart of the Beast
+    (4, 1437925, 1, TIME '10:00'),  -- Moulin
+    (6, 1507877, 1, TIME '10:00'),  -- Another Day
+    (1, 1263337, 2, TIME '10:00')   -- Heart of the Beast
+) AS t(room_number, tmdb_id, day_offset, local_time)
+JOIN rooms  r ON r.room_number = t.room_number
+JOIN movies m ON m.tmdb_id     = t.tmdb_id
+WHERE NOT EXISTS (
+    SELECT 1 FROM screenings s
+    WHERE s.room_id = r.id
+      AND s.start_time = ((DATE '2026-10-29' + t.day_offset) + t.local_time) AT TIME ZONE 'Europe/Paris'
+);
+
 -- Ticket Types ---------------------------
 CREATE TABLE IF NOT EXISTS ticket_types (
     id                  SERIAL PRIMARY KEY,
@@ -225,6 +249,38 @@ WHERE NOT EXISTS (
       AND re.reserved_at  = v.reserved_at
 );
 
+INSERT INTO reservations (customer_id, screening_id, ticket_type_id, reserved_at, price_paid)
+SELECT u.id,
+       s.id,
+       tt.id,
+       v.reserved_at,
+       ROUND(s.base_price * tt.price_multiplier, 2)
+FROM (VALUES
+    -- username, room_number, tmdb_id, day offset from Oct 29th, time (Paris), ticket type, reserved_at
+    ('john', 1, 1255833, 0, TIME '10:00', 'Normal',        TIMESTAMPTZ '2026-10-27 18:30:00+01'),  -- Whalefall
+    ('mary', 1, 1255833, 0, TIME '10:00', 'ENSAI Student', TIMESTAMPTZ '2026-10-27 19:05:00+01'),  -- Whalefall
+    ('john', 2, 1507877, 0, TIME '10:00', 'Normal',        TIMESTAMPTZ '2026-10-28 09:10:00+01'),  -- Another Day
+    ('mary', 3, 1263337, 0, TIME '10:30', 'Child',         TIMESTAMPTZ '2026-10-28 12:40:00+01'),  -- Heart of the Beast
+    ('john', 4, 1437925, 1, TIME '10:00', 'ENSAI Staff',   TIMESTAMPTZ '2026-10-28 20:15:00+01'),  -- Moulin
+    ('mary', 4, 1437925, 1, TIME '10:00', 'Normal',        TIMESTAMPTZ '2026-10-29 08:00:00+01'),  -- Moulin
+    ('mary', 6, 1507877, 1, TIME '10:00', 'ENSAI Student', TIMESTAMPTZ '2026-10-29 10:20:00+01'),  -- Another Day
+    ('john', 1, 1263337, 2, TIME '10:00', 'Normal',        TIMESTAMPTZ '2026-10-30 14:00:00+01')   -- Heart of the Beast
+) AS v(username, room_number, tmdb_id, day_offset, local_time, ticket_type, reserved_at)
+JOIN users        u  ON u.username    = v.username
+JOIN ticket_types tt ON tt.name       = v.ticket_type
+JOIN rooms        r  ON r.room_number = v.room_number
+JOIN movies       m  ON m.tmdb_id     = v.tmdb_id
+JOIN screenings   s  ON s.room_id  = r.id
+                    AND s.movie_id = m.id
+                    AND s.start_time = ((DATE '2026-10-29' + v.day_offset) + v.local_time) AT TIME ZONE 'Europe/Paris'
+WHERE NOT EXISTS (
+    SELECT 1 FROM reservations re
+    WHERE re.customer_id  = u.id
+      AND re.screening_id = s.id
+      AND re.ticket_type_id = tt.id
+      AND re.reserved_at  = v.reserved_at
+);
+
 -- Reviews --------------------------------
 CREATE TABLE IF NOT EXISTS reviews (
     id          SERIAL PRIMARY KEY,
@@ -236,3 +292,19 @@ CREATE TABLE IF NOT EXISTS reviews (
     -- one review per customer and per movie
     UNIQUE (customer_id, movie_id)
 );
+
+INSERT INTO reviews (customer_id, movie_id, rating, comment, created_at)
+SELECT u.id, m.id, v.rating, v.comment, v.created_at
+FROM (VALUES
+    ('john', 1255833, 8, 'Tense and moving, the dive scenes are stunning.',         TIMESTAMPTZ '2026-10-29 18:00:00+01'),  -- Whalefall
+    ('mary', 1255833, 6, 'A good survival thriller, but a bit too long.',           TIMESTAMPTZ '2026-10-30 09:30:00+01'),  -- Whalefall
+    ('john', 1507877, 7, 'A sincere and touching portrait.',                        TIMESTAMPTZ '2026-10-30 20:00:00+01'),  -- Another Day
+    ('mary', 1507877, 9, 'Great performance by the lead actress.',                  TIMESTAMPTZ '2026-11-01 11:00:00+01'),  -- Another Day
+    ('mary', 1263337, 7, 'A nice story between a soldier and his dog.',             TIMESTAMPTZ '2026-10-29 14:00:00+01'),  -- Heart of the Beast
+    ('john', 1263337, 6, NULL,                                                      TIMESTAMPTZ '2026-11-01 16:00:00+01'),  -- Heart of the Beast
+    ('john', 1437925, 8, 'Gripping and well acted, the interrogation is powerful.', TIMESTAMPTZ '2026-10-30 18:30:00+01'),  -- Moulin
+    ('mary', 1437925, 9, 'An important piece of French history, very well told.',   TIMESTAMPTZ '2026-10-31 10:00:00+01')   -- Moulin
+) AS v(username, tmdb_id, rating, comment, created_at)
+JOIN users  u ON u.username = v.username
+JOIN movies m ON m.tmdb_id  = v.tmdb_id
+ON CONFLICT (customer_id, movie_id) DO NOTHING;
