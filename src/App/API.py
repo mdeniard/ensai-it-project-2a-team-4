@@ -13,7 +13,16 @@ from .ReviewController import review_router, admin_review_router
 
 
 def run_app():
-    app = FastAPI(title="Projet Info 2A", description="Example project for ENSAI students")
+    app = FastAPI(
+            title="IT Project 2A",
+            version="1.0.0",
+            description=(
+                "Backend API for **Cinéville Bruz** allowing users to browse movies, "
+                "check screening schedules, book tickets, and leave reviews.\n\n"
+                "**Authentication:** Log in via `/users/login` to get a JWT token, "
+                "then click **Authorize** (`Bearer <token>`) to test protected or admin routes."
+            ),
+        )
 
     app.include_router(user_router)
 
