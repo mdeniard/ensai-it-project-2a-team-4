@@ -68,3 +68,17 @@ CREATE TABLE IF NOT EXISTS reservations (
     -- does not change the revenue of past sales)
     price_paid       NUMERIC(6, 2) NOT NULL
 );
+
+-- Reviews
+CREATE TABLE IF NOT EXISTS reviews (
+    id          SERIAL PRIMARY KEY,
+    customer_id INT NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+    movie_id    INT NOT NULL REFERENCES movies(id) ON DELETE CASCADE,
+    -- Rating given by the customer, from 1 to 10
+    rating      SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 10),
+    -- The comment is optional
+    comment     TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    -- One review per customer and per movie
+    UNIQUE (customer_id, movie_id)
+);
