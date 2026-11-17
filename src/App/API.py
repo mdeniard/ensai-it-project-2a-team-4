@@ -19,7 +19,7 @@ def run_app():
             description=(
                 "Backend API for **Cinéville Bruz** allowing users to browse movies, "
                 "check screening schedules, book tickets, and leave reviews.\n\n"
-                "**Authentication:** Log in via `/users/login` to get a JWT token, "
+                "**Authentication:** Log in via `/users/jwt` to get a JWT token, "
                 "then click **Authorize** (`Bearer <token>`) to test protected or admin routes."
             ),
         )

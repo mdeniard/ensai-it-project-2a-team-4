@@ -24,7 +24,7 @@ class ReviewService:
             The saved review (with its id and date)
 
         """
-        # The rating must be between 1 and 5
+        # The rating must be between 1 and 10
         if not 1 <= review.rating <= 10:
             raise ValueError("The rating must be between 1 and 10")
 
