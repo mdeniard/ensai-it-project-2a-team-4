@@ -7,21 +7,26 @@ from .DBConnector import DBConnector
 
 
 class ScreeningRepo:
+    """Repository that manages the screenings in the database (table screenings)."""
+
     db_connector: DBConnector
 
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:
+        """Create the repository.
+        Args:
+            db_connector (DBConnector, optional): The connection to the database.
+                If none is given, a new DBConnector is created.
+        """
         self.db_connector = db_connector or DBConnector()
 
     def get_by_id(self, id: int) -> Optional[Screening]:
-        raw_screening = self.db_connector.sql_query("SELECT * FROM screenings WHERE id = %s;", [id], "one")
         """Retrieve a screening by its database identifier.
-
         Args:
-            id: The unique database identifier.
-
-        Returns: 
-            The screening instance, or None if not found.
+            id (int): The unique database id of the screening.
+        Returns:
+            The Screening object, or None if no screening has this id.
         """
+        raw_screening = self.db_connector.sql_query("SELECT * FROM screenings WHERE id = %s;", [id], "one")
         if raw_screening is None:
             return None
         return Screening(**raw_screening)
@@ -29,6 +34,13 @@ class ScreeningRepo:
     def filter_screenings(
         self, start_from: Optional[datetime] = datetime.now(), movie_id: Optional[int] = None
     ) -> list[Screening]:
+        """Retrieve the upcoming screenings, sorted by start time (50 at most).
+        Args:
+            start_from (datetime, optional): Only the screenings starting at this moment or later are returned.
+            movie_id (int, optional): Only the screenings of this movie (its id in our database).
+        Returns:
+            list[Screening] of the matching screenings, or an empty list if there is none.
+        """
         query = """
             SELECT * FROM screenings
             WHERE start_time >= %(start_from)s
@@ -49,6 +61,14 @@ class ScreeningRepo:
         room_number: int,
         start_from: Optional[datetime] = None,
     ) -> list[Screening]:
+        """Retrieve the upcoming screenings of a room, sorted by start time.
+        Args:
+            room_number (int): The number of the room (not its database id).
+            start_from (datetime, optional): Only the screenings starting at this moment or later.
+                If none is given, the current time is used.
+        Returns:
+            list[Screening] of the room, or an empty list if there is none.
+        """
         if start_from is None:
             start_from = datetime.now()
 
@@ -67,6 +87,12 @@ class ScreeningRepo:
         return [Screening(**raw) for raw in raw_screenings or []]
 
     def create_screening(self, screening: Screening) -> Screening:
+        """Save a new screening (the id is given by the database).
+        Args:
+            screening (Screening): The screening to save (movie, room, start time, end time and base price).
+        Returns:
+            The saved Screening, with its id.
+        """
         raw = self.db_connector.sql_query(
             """
             INSERT INTO screenings (movie_id, room_id, start_time, end_time, base_price)
@@ -85,8 +111,13 @@ class ScreeningRepo:
         return Screening(**raw)
 
     def session_is_available(self, room_id: int, start_time: datetime, end_time: datetime) -> bool:
-        """
-        False if the room already has a screening overlapping [start_time, end_time)
+        """Check that a room is free during a time slot.
+        Args:
+            room_id (int): The database id of the room.
+            start_time (datetime): The start of the time slot.
+            end_time (datetime): The end of the time slot.
+        Returns:
+            True if the room has no screening overlapping [start_time, end_time), False otherwise.
         """
         raw = self.db_connector.sql_query(
             """
@@ -102,8 +133,11 @@ class ScreeningRepo:
         return raw is None
 
     def delete_screening(self, screening_id: int) -> bool:
-        """
-        Deletes a screening by id. Returns True if a row was deleted.
+        """Delete a screening. Its reservations are deleted too (ON DELETE CASCADE).
+        Args:
+            screening_id (int): The database id of the screening to delete.
+        Returns:
+            True if a screening was deleted, False if no screening has this id.
         """
         raw = self.db_connector.sql_query(
             """

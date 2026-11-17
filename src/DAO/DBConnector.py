@@ -6,7 +6,17 @@ from psycopg2.extras import RealDictCursor
 
 
 class DBConnector:
+    """Connection to the PostgreSQL database: sends the SQL queries of the repositories."""
+
     def __init__(self, config=None):
+        """Create the connector.
+        Args:
+            config (dict, optional): The connection settings, with the keys host, port, database,
+                user, password, schema and timezone. If none is given, the settings are read
+                from the environment variables of the .env file (POSTGRES_HOST, POSTGRES_PORT,
+                POSTGRES_DATABASE, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_SCHEMA and,
+                optionally, POSTGRES_TIMEZONE which is "Europe/Paris" by default).
+        """
         if config is not None:
             self.host = config["host"]
             self.port = config["port"]
@@ -30,6 +40,18 @@ class DBConnector:
         data: Optional[Union[tuple, list, dict]] = None,
         return_type: Union[Literal["one"], Literal["all"]] = "one",
     ):
+        """Run an SQL query on the configured schema and return its result.
+        Each call opens its own connection, and the changes are saved (committed) at the end of the call.
+        Args:
+            query (str): The SQL query. The values are not written in it, they are given
+                with data and marked by %s or %(name)s, which protects against SQL injection.
+            data (tuple, list or dict, optional): The values of the query, a list or tuple
+                for %s markers or a dict for %(name)s markers.
+            return_type (str): "one" to get only the first row, "all" to get every row (default "one").
+        Returns:
+            With "one": the first row as a dict (column name: value), or None if the query returns no row.
+            With "all": the list of all the rows, each one as a dict (an empty list if there is no row).
+        """
         try:
             with psycopg2.connect(
                 host=self.host,

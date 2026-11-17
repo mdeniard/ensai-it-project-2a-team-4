@@ -6,12 +6,25 @@ from .DBConnector import DBConnector
 
 
 class UserRepo:
+    """Repository that manages the users in the database (table users)."""
+
     db_connector: DBConnector
 
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:
+        """Create the repository.
+        Args:
+            db_connector (DBConnector, optional): The connection to the database.
+                If none is given, a new DBConnector is created.
+        """
         self.db_connector = db_connector or DBConnector()
 
     def get_by_id(self, user_id: int) -> Optional[User]:
+        """Retrieve a user by its database identifier.
+        Args:
+            user_id (int): The unique database id of the user.
+        Returns:
+            The User object, or None if no user has this id.
+        """
         raw_user = self.db_connector.sql_query("SELECT * from users WHERE id=%s", [user_id], "one")
         if raw_user is None:
             return None
@@ -19,6 +32,12 @@ class UserRepo:
         return User(**raw_user)
 
     def get_by_username(self, username: str) -> Optional[User]:
+        """Retrieve a user by its username (used to log in).
+        Args:
+            username (str): The unique username of the user.
+        Returns:
+            The User object, or None if no user has this username.
+        """
         raw_user = self.db_connector.sql_query("SELECT * from users WHERE username=%s", [username], "one")
         if raw_user is None:
             return None
@@ -26,6 +45,13 @@ class UserRepo:
         return User(**raw_user)
 
     def get_all(self, limit: int = 100, offset: int = 0) -> list[User]:
+        """Retrieve the users, sorted by id, page by page.
+        Args:
+            limit (int): The maximum number of users returned (default 100).
+            offset (int): The number of users skipped before the first one returned (default 0).
+        Returns:
+            list[User] of the requested page, or an empty list if there is none.
+        """
         raw_users = self.db_connector.sql_query(
             """
             SELECT * FROM users
@@ -38,6 +64,12 @@ class UserRepo:
         return [User(**raw) for raw in raw_users or []]
 
     def create_user(self, user: User) -> User:
+        """Save a new user (the id is given by the database).
+        Args:
+            user (User): The user to save. Its password must already be hashed and its salt set.
+        Returns:
+            The saved User, with its id.
+        """
         raw_created_user = self.db_connector.sql_query(
             """
         INSERT INTO users (username, email, password_hash, salt, first_name, last_name, is_admin)
@@ -59,6 +91,13 @@ class UserRepo:
         return User(**raw_created_user)
 
     def update_user(self, user: User) -> User:
+        """Update all the fields of an existing user.
+        Args:
+            user (User): The user with its new data. Its id identifies the row to update,
+                so it must be set (the user must have been read from the database first).
+        Returns:
+            The updated User.
+        """
         raw_updated_user = self.db_connector.sql_query(
             """
             UPDATE users
@@ -88,9 +127,13 @@ class UserRepo:
         return User(**raw_updated_user)
 
     def update_password(self, user_id: int, password_hash: str, salt: str) -> bool:
-        """
-        Updates a user's password hash and salt.
-        Returns True if a user was updated, False if no user matched.
+        """Update the password of a user (only the hash and the salt are changed).
+        Args:
+            user_id (int): The id of the user.
+            password_hash (str): The new hashed password.
+            salt (str): The new salt used to hash the password.
+        Returns:
+            True if a user was updated, False if no user has this id.
         """
         raw_updated = self.db_connector.sql_query(
             """
@@ -106,8 +149,11 @@ class UserRepo:
         return raw_updated is not None
 
     def delete_user(self, user_id: int) -> bool:
-        """
-        Deletes a user by id. Returns True if a user was deleted, False if no user matched.
+        """Delete a user. Its reservations and reviews are deleted too (ON DELETE CASCADE).
+        Args:
+            user_id (int): The id of the user to delete.
+        Returns:
+            True if a user was deleted, False if no user has this id.
         """
         raw_deleted_user = self.db_connector.sql_query(
             """

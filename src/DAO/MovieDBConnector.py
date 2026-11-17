@@ -17,6 +17,12 @@ class MovieDBConnector:
     api_key: Optional[str]
 
     def __init__(self, api_key: Optional[str] = None) -> None:
+        """Create the connector.
+        Args:
+            api_key (str, optional): The TMDB API key.
+                If none is given, it is read from the TMDB_API_KEY variable of the .env file
+                (giving a key by hand is useful for the tests).
+        """
         # If no key is given, we read it from the .env file
         # (giving a key by hand is useful for the tests)
         if api_key is not None:
@@ -30,7 +36,8 @@ class MovieDBConnector:
             title (str): The title (or part of the title) of the movie.
             year (int, optional): The release year, to reduce ambiguity.
         Returns:
-            list[dict] of matching movies, so that the administrator can choose the right one.
+            list[dict] of matching movies (tmdb_id, title, release_date, overview, poster_url),
+            so that the administrator can choose the right one. An empty list if there is none.
         """
         # Parameters sent to TMDB: the title, and the year only if it was given
         params = {"query": title}
@@ -82,11 +89,12 @@ class MovieDBConnector:
         )
 
     def _get(self, endpoint: str, params: Optional[dict] = None) -> Optional[dict]:
-        """Send a GET request to TMDB.
+        """Send a GET request to TMDB (the API key is added to every request).
+        Args:
+            endpoint (str): The end of the TMDB address, for example "/search/movie".
+            params (dict, optional): The query parameters to send (the API key is added to them).
         Returns:
             The JSON response as a dict, or None if TMDB answers 404 (not found).
-        Raises:
-            requests.HTTPError for any other error (invalid API key, TMDB unavailable...).
         """
         # The API key must be sent with every request
         if params is None:
@@ -108,14 +116,24 @@ class MovieDBConnector:
 
     @staticmethod
     def _build_poster_url(poster_path: Optional[str]) -> Optional[str]:
-        """Build the full poster URL from the end of the address given by TMDB."""
+        """Build the full poster URL from the end of the address given by TMDB.
+        Args:
+            poster_path (str, optional): The end of the poster address given by TMDB, for example "/abc.jpg".
+        Returns:
+            The full image URL, or None if the movie has no poster.
+        """
         if not poster_path:
             return None
         return TMDB_POSTER_BASE_URL + poster_path
 
     @staticmethod
     def _empty_to_none(value):
-        """TMDB sometimes returns "" or 0 when it has no information: we store None instead."""
+        """TMDB sometimes returns "" or 0 when it has no information: we store None instead.
+        Args:
+            value: The value given by TMDB (text, number or None).
+        Returns:
+            None if the value is empty (or 0), otherwise the value unchanged.
+        """
         if not value:
             return None
         return value

@@ -7,18 +7,37 @@ from .DBConnector import DBConnector
 
 
 class ReservationRepo:
+    """Repository that manages the reservations in the database (table reservations)."""
+
     db_connector: DBConnector
 
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:
+        """Create the repository.
+        Args:
+            db_connector (DBConnector, optional): The connection to the database.
+                If none is given, a new DBConnector is created.
+        """
         self.db_connector = db_connector or DBConnector()
 
     def get_by_id(self, id) -> Optional[Reservation]:
+        """Retrieve a reservation by its database identifier.
+        Args:
+            id (int): The unique database id of the reservation.
+        Returns:
+            The Reservation object, or None if no reservation has this id.
+        """
         raw_reservation = self.db_connector.sql_query("SELECT * FROM reservations WHERE id = %s;", [id], "one")
         if raw_reservation is None:
             return None
         return Reservation(**raw_reservation)
 
     def get_customer_reservations(self, customer_id) -> list[Reservation]:
+        """Retrieve all the reservations of a customer.
+        Args:
+            customer_id (int): The database id of the customer.
+        Returns:
+            list[Reservation] of the customer, or an empty list if he has none.
+        """
         raw_reservation = self.db_connector.sql_query(
             "SELECT * FROM reservations WHERE customer_id = %s;", [customer_id], return_type="all"
         )
@@ -27,6 +46,17 @@ class ReservationRepo:
     def get_accounting_by_movie(
         self, movie_id: int, start_from: Optional[datetime] = None, end_at: Optional[datetime] = None
     ):
+        """Compute the number of tickets sold and the revenue of each screening of a movie.
+        Only the reservations made between the two dates are counted (the screenings
+        without any reservation in this period are still returned, with 0 ticket and 0 revenue).
+        Args:
+            movie_id (int): The database id of the movie.
+            start_from (datetime, optional): Only the reservations made from this date on.
+            end_at (datetime, optional): Only the reservations made until this date.
+        Returns:
+            list[dict] with one row per screening, sorted by start time. Each row contains
+            movie_id, screening_id, start_time, tickets_sold and revenue.
+        """
         query = """
             SELECT
                 m.id AS movie_id,
@@ -59,6 +89,13 @@ class ReservationRepo:
         return self.db_connector.sql_query(query, params, "all")
 
     def create_reservation(self, reservation: Reservation) -> Reservation:
+        """Save a new reservation (the id is given by the database).
+        Args:
+            reservation (Reservation): The reservation to save (customer, screening, ticket type,
+                date of the reservation and price paid).
+        Returns:
+            The saved Reservation, with its id.
+        """
         raw = self.db_connector.sql_query(
             """
             INSERT INTO reservations (customer_id, screening_id, ticket_type_id, reserved_at, price_paid)
@@ -79,6 +116,8 @@ class ReservationRepo:
     def check_room_capacity_reservation(self, reservation: Reservation) -> bool:
         """Check if there is still at least one free seat for the screening of the reservation.
         (one reservation = one ticket = one seat)
+        Args:
+            reservation (Reservation): The reservation we want to make (only its screening is used).
         Returns:
             True if the room is not full, False if it is full (or if the screening does not exist).
         """
