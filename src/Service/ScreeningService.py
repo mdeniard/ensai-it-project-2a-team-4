@@ -12,7 +12,7 @@ from src.DAO.RoomRepo import RoomRepo
 
 
 class ScreeningService:
-    """Service that manages rooms."""
+    """Service that manages screenings (schedule of the rooms and creation by the administrators)."""
 
     def __init__(
         self,
@@ -20,11 +20,27 @@ class ScreeningService:
         movie_repo: Optional[MovieRepo] = None,
         room_repo: Optional[RoomRepo] = None,
     ):
+        """Create the service.
+        Args:
+            screening_repo (ScreeningRepo, optional): Access to the screenings in the database.
+            movie_repo (MovieRepo, optional): Access to the movies in the database.
+            room_repo (RoomRepo, optional): Access to the rooms in the database.
+                If one is not given, a new one is created.
+        """
         self.screening_repo = screening_repo or ScreeningRepo()
         self.movie_repo = movie_repo or MovieRepo()
         self.room_repo = room_repo or RoomRepo()
 
     def filter_screenings(self, movie_id: Optional[int] = None, day: Optional[date] = None) -> list[Screening]:
+        """List the upcoming screenings, sorted by start time (50 at most).
+        The screenings already started are never returned.
+        Args:
+            movie_id (int, optional): Only the screenings of this movie (its id in our database).
+            day (date, optional): Only the screenings from the start of this day on.
+                The day is read in Paris time, and a day in the past is replaced by the current moment.
+        Returns:
+            list[Screening] of the matching screenings, or an empty list if there is none.
+        """
         now = datetime.now(timezone.utc)
         start_from = now
 
@@ -36,9 +52,27 @@ class ScreeningService:
         return self.screening_repo.filter_screenings(start_from, movie_id)
 
     def room_schedule(self, room_number: int) -> list[Screening]:
+        """List the upcoming screenings of a room, sorted by start time.
+        Args:
+            room_number (int): The number of the room (not its database id).
+        Returns:
+            list[Screening] of the room, or an empty list if there is none.
+        """
         return self.screening_repo.room_schedule(room_number)
 
     def create_screening(self, movie_id: int, room_id: int, start_time: datetime, base_price: float) -> Screening:
+        """Create a screening. The end time is computed: start time + duration of the movie + 20 minutes.
+        The screening is refused if the base price is not positive, if the movie or the room
+        does not exist, or if the room is already booked during this time slot.
+        Args:
+            movie_id (int): The database id of the movie.
+            room_id (int): The database id of the room.
+            start_time (datetime): The start of the screening.
+            base_price (float): The base price of a ticket (multiplied by the coefficient
+                of the ticket type when a customer books).
+        Returns:
+            The saved Screening, with its id and its end time.
+        """
         # The base price of a ticket must be positive
         if base_price <= 0:
             raise ValueError("The base price must be greater than 0")
@@ -67,4 +101,10 @@ class ScreeningService:
         )
 
     def delete_screening(self, screening_id: int) -> bool:
+        """Delete a screening. Its reservations are deleted too.
+        Args:
+            screening_id (int): The database id of the screening to delete.
+        Returns:
+            True if the screening was deleted, False if no screening has this id.
+        """
         return self.screening_repo.delete_screening(screening_id)

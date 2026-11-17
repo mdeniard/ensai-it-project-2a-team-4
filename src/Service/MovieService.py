@@ -6,64 +6,76 @@ from src.DAO.MovieRepo import MovieRepo
 
 
 class MovieService:
-    """Service that manages movies."""
+    """Service that manages movies (our catalogue and the import from TMDB)."""
 
     def __init__(
         self,
         movie_repo: Optional[MovieRepo] = None,
         movie_db_connector: Optional[MovieDBConnector] = None,
     ):
+        """Create the service.
+        Args:
+            movie_repo (MovieRepo, optional): Access to the movies in our database.
+            movie_db_connector (MovieDBConnector, optional): Access to the external TMDB API.
+                If one is not given, a new one is created.
+        """
         # Access to our own database (table movie)
         self.movie_repo = movie_repo or MovieRepo()
         # Access to the external TMDB API
         self.movie_db_connector = movie_db_connector or MovieDBConnector()
 
     def get_screening_movies(self) -> list[Movie]:
-        """List all movies currently screening.
+        """List all the movies of our database.
         Returns:
-            list[Movie] containing all movies currently playing.
+            list[Movie] of all the movies, or an empty list if there is none.
         """
         return self.movie_repo.get_screening_movies()
 
     def get_by_id(self, tmdb_id: int) -> Movie:
-        """Find a specific movie by its id.
+        """Find a movie by its id in our database.
         Args:
-            movie_db (int): The unique identifier of the movie.
+            tmdb_id (int): The database id of the movie. Despite its name, this is not the TMDB id.
         Returns:
-            Movie object if found, otherwise None.
+            The Movie, or None if no movie has this id.
         """
         return self.movie_repo.get_by_id(tmdb_id)
 
     def create_movie(self, movie):
-        """Create a movie
+        """Create a movie from data given by hand (to get it from TMDB, use import_from_tmdb).
         Args:
-            movie : all the data concerning the movie
+            movie (Movie): The movie to save (TMDB id, title, description, duration,
+                release date, rating and poster url).
+        Returns:
+            The saved Movie, with its id.
         """
         return self.movie_repo.create(movie)
 
     def update_movie(self, movie):
-        """Update a movie
+        """Update all the fields of a movie.
         Args:
-            movie : new data concerning the movie
+            movie (Movie): The movie with its new data. Its id identifies the one to update.
+        Returns:
+            The updated Movie, or None if no movie has this id.
         """
         return self.movie_repo.update(movie)
 
     def delete_movie(self, movie_id):
-        """Delete a movie
+        """Delete a movie. Its screenings, their reservations and its reviews are deleted too.
         Args:
-            movie_id : id of the movie we want to delete
+            movie_id (int): The database id of the movie to delete.
+        Returns:
+            True if the movie was deleted, False if no movie has this id.
         """
         return self.movie_repo.delete(movie_id)
 
     def search_tmdb(self, title: str, year: Optional[int] = None) -> list[dict]:
         """Search movies on TMDB, so that the administrator can choose which one to import.
+        The search is refused if the title is empty or made only of spaces.
         Args:
             title (str): The title (or part of the title) of the movie.
             year (int, optional): The release year, to reduce ambiguity.
         Returns:
             list[dict] of matching movies (tmdb_id, title, release_date, overview, poster_url).
-        Raises:
-            ValueError if the title is empty.
         """
         # We refuse an empty search (or a search made only of spaces)
         if title is None or title.strip() == "":
@@ -74,12 +86,11 @@ class MovieService:
 
     def import_from_tmdb(self, tmdb_id: int) -> Optional[Movie]:
         """Get a movie from TMDB and save it in our database.
+        The import is refused if the movie is already in our catalogue.
         Args:
             tmdb_id (int): The TMDB identifier of the movie chosen by the administrator.
         Returns:
             The saved Movie (with its id in our database), or None if TMDB does not know this movie.
-        Raises:
-            ValueError if the movie is already in our catalogue.
         """
         # 1. Check that the movie is not already in our database
         # (we search with the TMDB id, not with the id of our database)

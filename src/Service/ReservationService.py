@@ -10,7 +10,7 @@ from src.DAO.UserRepo import UserRepo
 
 
 class ReservationService:
-    """Class that manages reservations"""
+    """Service that manages the reservations (booking of tickets and price computation)."""
 
     def __init__(
         self,
@@ -19,15 +19,35 @@ class ReservationService:
         user_repo: Optional[UserRepo] = None,
         ticket_type_repo: Optional[TicketTypeRepo] = None,
     ) -> None:
+        """Create the service.
+        Args:
+            reservation_repo (ReservationRepo, optional): Access to the reservations in the database.
+            screening_repo (ScreeningRepo, optional): Access to the screenings in the database.
+            user_repo (UserRepo, optional): Access to the users in the database.
+            ticket_type_repo (TicketTypeRepo, optional): Access to the ticket types in the database.
+                If one is not given, a new one is created.
+        """
         self.reservation_repo = reservation_repo or ReservationRepo()
         self.screening_repo = screening_repo or ScreeningRepo()
         self.user_repo = user_repo or UserRepo()
         self.ticket_type_repo = ticket_type_repo or TicketTypeRepo()
 
     def get_by_id(self, id: int) -> Optional[Reservation]:
+        """Find a reservation by its database id.
+        Args:
+            id (int): The database id of the reservation.
+        Returns:
+            The Reservation, or None if no reservation has this id.
+        """
         return self.reservation_repo.get_by_id(id)
 
     def get_customer_reservation(self, customer_id: int) -> list[Reservation]:
+        """List all the reservations of a customer.
+        Args:
+            customer_id (int): The database id of the customer.
+        Returns:
+            list[Reservation] of the customer, or an empty list if he has none.
+        """
         return self.reservation_repo.get_customer_reservations(customer_id)
 
     @staticmethod
@@ -49,14 +69,14 @@ class ReservationService:
 
     def create_reservation(self, reservation: Reservation) -> Reservation:
         """Book one ticket for a screening.
+        The booking is refused if the screening, the customer or the ticket type does not exist,
+        if the screening has already started, if the ticket type is not active or if the room is full.
+        The date of the reservation is set by the server, and the price paid
+        (base price of the screening x multiplier of the ticket type) is saved with the reservation.
         Args:
-            reservation: the reservation to save (customer, screening and ticket type)
+            reservation (Reservation): The reservation to save (customer, screening and ticket type).
         Returns:
-            The saved reservation (with its id)
-        Raises:
-            LookupError if the screening, the customer or the ticket type does not exist.
-            ValueError if the screening has already started, the ticket type is not active
-            or the room is full.
+            The saved Reservation, with its id, its date and the price paid.
         """
         now = datetime.now(timezone.utc)
 
