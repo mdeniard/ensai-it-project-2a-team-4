@@ -5,24 +5,34 @@ from src.DAO.TicketTypeRepo import TicketTypeRepo
 
 
 class TicketTypeService:
-    """Service that manages ticket types."""
+    """Service that manages ticket types (Normal, Child, Student...)."""
 
     def __init__(
         self,
         ticket_type_repo: Optional[TicketTypeRepo] = None,
     ):
+        """Create the service.
+        Args:
+            ticket_type_repo (TicketTypeRepo, optional): Access to the ticket types in the database.
+                If none is given, a new TicketTypeRepo is created.
+        """
         # Access to our own database (table ticket_types)
         self.ticket_type_repo: TicketTypeRepo = ticket_type_repo or TicketTypeRepo()
 
     def get_by_id(self, ticket_type_id) -> Optional[TicketType]:
-        """Get the ticket type with the id
+        """Find a ticket type by its id.
         Args:
-            ticket_type_id : id of the wanted ticket type
+            ticket_type_id (int): The id of the wanted ticket type.
+        Returns:
+            The TicketType, or None if no ticket type has this id.
         """
         return self.ticket_type_repo.get_by_id(ticket_type_id)
 
     def get_all_ticket_types(self) -> list[TicketType]:
-        """Get all ticket types"""
+        """List all the ticket types, including the inactive ones.
+        Returns:
+            list[TicketType] of all the ticket types, sorted by id, or an empty list if there is none.
+        """
         return self.ticket_type_repo.get_all()
 
     def get_active_ticket_types(self) -> list[TicketType]:
@@ -38,22 +48,29 @@ class TicketTypeService:
         return active_ticket_types
 
     def create_ticket_type(self, ticket_type: TicketType) -> TicketType:
-        """Create a ticket type
+        """Create a ticket type.
         Args:
-            ticket_type : data concerning the ticket type
+            ticket_type (TicketType): The ticket type to save (name, price multiplier and active).
+        Returns:
+            The saved TicketType, with its id.
         """
         return self.ticket_type_repo.insert_ticket_type(ticket_type)
 
     def update_ticket_type(self, ticket_type: TicketType) -> Optional[TicketType]:
-        """Update a ticket type
+        """Update a ticket type.
         Args:
-            ticket_type : new data concerning the ticket type
+            ticket_type (TicketType): The ticket type with its new data. Its id identifies the one to update.
+        Returns:
+            The updated TicketType, or None if no ticket type has this id.
         """
         return self.ticket_type_repo.update_ticket_type(ticket_type)
 
     def delete_ticket_type(self, ticket_type_id: int) -> bool:
-        """Delete a ticket type
+        """Delete a ticket type. The reservations made with it are deleted too (ON DELETE CASCADE).
+        To stop selling a ticket type without losing the sales, set it as not active instead.
         Args:
-            ticket_type_id : the id of the ticket type we wish to delete
+            ticket_type_id (int): The id of the ticket type to delete.
+        Returns:
+            True if a ticket type was deleted, False if no ticket type has this id.
         """
         return self.ticket_type_repo.delete_ticket_type(ticket_type_id)
