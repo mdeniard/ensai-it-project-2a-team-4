@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from src.Business_object.Screening import Screening
@@ -32,7 +32,7 @@ class ScreeningRepo:
         return Screening(**raw_screening)
 
     def filter_screenings(
-        self, start_from: Optional[datetime] = datetime.now(), movie_id: Optional[int] = None
+        self, start_from: Optional[datetime] = None, movie_id: Optional[int] = None
     ) -> list[Screening]:
         """Retrieve the upcoming screenings, sorted by start time (50 at most).
         Args:
@@ -41,6 +41,8 @@ class ScreeningRepo:
         Returns:
             list[Screening] of the matching screenings, or an empty list if there is none.
         """
+        if start_from is None:
+            start_from = datetime.now(timezone.utc)
         query = """
             SELECT * FROM screenings
             WHERE start_time >= %(start_from)s
