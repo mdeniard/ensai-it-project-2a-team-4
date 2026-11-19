@@ -43,6 +43,24 @@ class ReservationRepo:
         )
         return [Reservation(**raw) for raw in raw_reservation or []]
 
+    def count_screening_reservations(self, screening_id: int) -> int:
+        """Count the tickets sold for a screening (one reservation = one ticket).
+        Args:
+            screening_id (int): The database id of the screening.
+        Returns:
+            The number of reservations of the screening (0 if it has none or does not exist).
+        """
+        raw = self.db_connector.sql_query(
+            "SELECT COUNT(*) AS tickets_sold FROM reservations WHERE screening_id = %s;",
+            [screening_id],
+            "one",
+        )
+        # COUNT(*) always returns one row, but we stay careful if nothing comes back
+        if raw is None:
+            return 0
+        # pyrefly: ignore
+        return raw["tickets_sold"]
+
     def get_accounting_by_movie(
         self, movie_id: int, start_from: Optional[datetime] = None, end_at: Optional[datetime] = None
     ):

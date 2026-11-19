@@ -133,7 +133,8 @@ class ScreeningRepo:
         return raw is None
 
     def delete_screening(self, screening_id: int) -> bool:
-        """Delete a screening. Its reservations are deleted too (ON DELETE CASCADE).
+        """Delete a screening. Its reservations would be deleted too (ON DELETE CASCADE),
+        so ScreeningService only calls this method when no ticket was sold.
         Args:
             screening_id (int): The database id of the screening to delete.
         Returns:

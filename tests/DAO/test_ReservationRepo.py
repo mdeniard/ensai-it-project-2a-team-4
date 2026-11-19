@@ -100,6 +100,29 @@ def test_get_customer_reservations_none():
     assert reservation_repo.get_customer_reservations(5) == []
 
 
+# ---------- count_screening_reservations ----------
+
+
+def test_count_screening_reservations():
+    # GIVEN 3 tickets were sold for the screening
+    db_connector = MockDBConnector({"tickets_sold": 3})
+    reservation_repo = ReservationRepo(db_connector)
+
+    # WHEN we count them / THEN we get 3
+    assert reservation_repo.count_screening_reservations(3) == 3
+    # AND the repo counted the reservations of the right screening
+    assert "COUNT(*)" in db_connector.last_query
+    assert db_connector.last_data == [3]
+
+
+def test_count_screening_reservations_none():
+    # GIVEN no ticket was sold for the screening
+    reservation_repo = ReservationRepo(MockDBConnector({"tickets_sold": 0}))
+
+    # WHEN we count them / THEN we get 0
+    assert reservation_repo.count_screening_reservations(3) == 0
+
+
 # ---------- create_reservation ----------
 
 

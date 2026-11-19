@@ -9,6 +9,7 @@ from src.Business_object.Screening import Screening
 from src.DAO.ScreeningRepo import ScreeningRepo
 from src.DAO.MovieRepo import MovieRepo
 from src.DAO.RoomRepo import RoomRepo
+from src.DAO.ReservationRepo import ReservationRepo
 
 
 class ScreeningService:
@@ -19,17 +20,20 @@ class ScreeningService:
         screening_repo: Optional[ScreeningRepo] = None,
         movie_repo: Optional[MovieRepo] = None,
         room_repo: Optional[RoomRepo] = None,
+        reservation_repo: Optional[ReservationRepo] = None,
     ):
         """Create the service.
         Args:
             screening_repo (ScreeningRepo, optional): Access to the screenings in the database.
             movie_repo (MovieRepo, optional): Access to the movies in the database.
             room_repo (RoomRepo, optional): Access to the rooms in the database.
+            reservation_repo (ReservationRepo, optional): Access to the reservations in the database.
                 If one is not given, a new one is created.
         """
         self.screening_repo = screening_repo or ScreeningRepo()
         self.movie_repo = movie_repo or MovieRepo()
         self.room_repo = room_repo or RoomRepo()
+        self.reservation_repo = reservation_repo or ReservationRepo()
 
     def filter_screenings(self, movie_id: Optional[int] = None, day: Optional[date] = None) -> list[Screening]:
         """List the upcoming screenings, sorted by start time (50 at most).
@@ -101,10 +105,20 @@ class ScreeningService:
         )
 
     def delete_screening(self, screening_id: int) -> bool:
-        """Delete a screening. Its reservations are deleted too.
+        """Delete a screening that has no ticket sold.
+        A screening with tickets sold cannot be deleted: its reservations would be deleted too
+        (ON DELETE CASCADE), so the sales would disappear from the accounting.
         Args:
             screening_id (int): The database id of the screening to delete.
         Returns:
             True if the screening was deleted, False if no screening has this id.
+        Raises:
+            ValueError if tickets were already sold for this screening.
         """
+        # Refuse the deletion if at least one ticket was sold
+        tickets_sold = self.reservation_repo.count_screening_reservations(screening_id)
+        if tickets_sold > 0:
+            raise ValueError(f"{tickets_sold} ticket(s) already sold for this screening, it cannot be deleted")
+
+        # No ticket sold: the screening can be deleted safely
         return self.screening_repo.delete_screening(screening_id)

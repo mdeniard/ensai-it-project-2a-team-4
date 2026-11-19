@@ -101,20 +101,22 @@ def test_get_screening_movies_no_ticket_type():
 
 
 def test_insert_ticket_type():
-    # GIVEN a new movie (no id yet) and a database that returns the saved row
+    # GIVEN a new ticket type (no id yet) and a database that returns the saved row
     db_connector = MockDBConnector(STUDENT_ROW)
     ticket_type_repo = TicketTypeRepo(db_connector)
 
     # WHEN we save it
-    created_ticket_type = ticket_type_repo.insert_ticket_type(TicketType("Student", 0.7, True, id=1))
+    created_ticket_type = ticket_type_repo.insert_ticket_type(TicketType("Student", 0.7, True))
 
     # THEN we get the ticket type with the id given by the database
     assert created_ticket_type.id == 1
     assert created_ticket_type.name == "Student"
     # AND the repo sent an INSERT with the values of the ticket type
-    assert "INSERT INTO ticket_types" in db_connector.last_query
+    assert "INSERT INTO ticket_types (name, price_multiplier, active)" in db_connector.last_query
     assert db_connector.last_data["price_multiplier"] == 0.7
     assert db_connector.last_data["active"]
+    # AND the id is not sent (PostgreSQL creates it)
+    assert "id" not in db_connector.last_data
 
 
 # ---------- update ----------

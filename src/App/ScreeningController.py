@@ -78,7 +78,8 @@ def delete_screening(
     confirm: bool = False,
 ) -> None:
     """
-    Delete a screening, with all its reservations.
+    Delete a screening. It is refused if tickets were already sold for it,
+    so that the sales stay in the accounting.
 
     Args:
 
@@ -91,5 +92,11 @@ def delete_screening(
             detail="Confirmation required: repeat the request with confirm=True",
         )
 
-    if not ScreeningService().delete_screening(screening_id):
+    try:
+        deleted = ScreeningService().delete_screening(screening_id)
+    except ValueError as e:
+        # Tickets were already sold for this screening
+        raise HTTPException(status_code=409, detail=str(e)) from e
+
+    if not deleted:
         raise HTTPException(status_code=404, detail="Screening not found")

@@ -45,10 +45,11 @@ class TicketTypeRepo:
         Returns:
             The saved TicketType, with its id.
         """
+        # The id is not sent: PostgreSQL creates it (SERIAL) and RETURNING * gives it back
         raw = self.db_connector.sql_query(
             """
-            INSERT INTO ticket_types (id, name, price_multiplier, active)
-            VALUES %(name)s, %(price_multiplier)s, %(active)s)
+            INSERT INTO ticket_types (name, price_multiplier, active)
+            VALUES (%(name)s, %(price_multiplier)s, %(active)s)
             RETURNING *;
             """,
             {
