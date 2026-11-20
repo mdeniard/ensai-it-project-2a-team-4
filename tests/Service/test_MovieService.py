@@ -3,8 +3,7 @@ import pytest
 from src.Business_object.Movie import Movie
 from src.Service.MovieService import MovieService
 
-# These tests use a fake repo (instead of the database) and a fake connector (instead of TMDB),
-# like the MockDBConnector in tests/DAO/test_UserRepo.py
+# These tests use a fake repo (instead of the database) and a fake connector (instead of TMDB)
 
 
 def make_wild_robot(movie_id=None):

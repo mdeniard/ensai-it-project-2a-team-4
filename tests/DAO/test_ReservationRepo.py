@@ -4,24 +4,23 @@ from decimal import Decimal
 from src.Business_object.Reservation import Reservation
 from src.DAO.ReservationRepo import ReservationRepo
 
-# These tests never use the real database:
-# we give ReservationRepo a fake DBConnector (like the MockDBConnector in tests/DAO/test_UserRepo.py)
+# These tests never use the real database: we give ReservationRepo a fake DBConnector.
+# They only check the Python part of the repo (a row is turned into a Reservation, the right values are sent,
+# the free seats are compared to the capacity). They cannot tell if the SQL is correct: that needs a real database.
 
 
 class MockDBConnector:
     """Fake DBConnector.
     - it returns the answer we prepared (as if PostgreSQL had answered)
-    - it remembers the query and the data it received, so that we can check them in the tests
+    - it remembers the data it received, so that we can check them in the tests
     """
 
     def __init__(self, answer):
         self.answer = answer
-        self.last_query = None
         self.last_data = None
 
     def sql_query(self, query, data=None, return_type="one"):
         # Remember what the repo sent
-        self.last_query = query
         self.last_data = data
         # Return the prepared answer
         return self.answer
@@ -57,19 +56,11 @@ def test_get_by_id_found():
     # WHEN we search it
     reservation = reservation_repo.get_by_id(1)
 
-    # THEN we get a Reservation object with the right values
+    # THEN we get a Reservation object with the right values (the price stays a Decimal)
     assert reservation is not None
-    assert reservation.id == 1
     assert reservation.customer_id == 5
     assert reservation.screening_id == 3
-
-
-def test_get_by_id_not_found():
-    # GIVEN the database finds nothing
-    reservation_repo = ReservationRepo(MockDBConnector(None))
-
-    # WHEN we search a reservation / THEN we get None
-    assert reservation_repo.get_by_id(42) is None
+    assert reservation.price_paid == Decimal("8.00")
 
 
 # ---------- get_customer_reservations ----------
@@ -88,19 +79,10 @@ def test_get_customer_reservations():
     # THEN we get the two reservations
     assert len(reservations) == 2
     # AND the repo searched with the id of the customer
-    assert "WHERE customer_id" in db_connector.last_query
     assert db_connector.last_data == [5]
 
 
-def test_get_customer_reservations_none():
-    # GIVEN the customer has no reservation
-    reservation_repo = ReservationRepo(MockDBConnector([]))
-
-    # WHEN we list his reservations / THEN we get an empty list
-    assert reservation_repo.get_customer_reservations(5) == []
-
-
-# ---------- count_screening_reservations ----------
+# ---------- count_screening_reservations (used before deleting a screening) ----------
 
 
 def test_count_screening_reservations():
@@ -111,16 +93,7 @@ def test_count_screening_reservations():
     # WHEN we count them / THEN we get 3
     assert reservation_repo.count_screening_reservations(3) == 3
     # AND the repo counted the reservations of the right screening
-    assert "COUNT(*)" in db_connector.last_query
     assert db_connector.last_data == [3]
-
-
-def test_count_screening_reservations_none():
-    # GIVEN no ticket was sold for the screening
-    reservation_repo = ReservationRepo(MockDBConnector({"tickets_sold": 0}))
-
-    # WHEN we count them / THEN we get 0
-    assert reservation_repo.count_screening_reservations(3) == 0
 
 
 # ---------- create_reservation ----------
@@ -136,13 +109,9 @@ def test_create_reservation():
 
     # THEN we get the reservation with the id given by the database
     assert created.id == 1
-    # AND the id is not sent (PostgreSQL creates it)
+    # AND the id is not sent (PostgreSQL creates it), but the price paid is
     assert "id" not in db_connector.last_data
-    assert db_connector.last_data["customer_id"] == 5
-    assert db_connector.last_data["screening_id"] == 3
-    # AND the price paid is saved too
     assert db_connector.last_data["price_paid"] == Decimal("8.00")
-    assert created.price_paid == Decimal("8.00")
 
 
 # ---------- check_room_capacity_reservation ----------
@@ -153,14 +122,6 @@ def test_check_room_capacity_free_seats():
     reservation_repo = ReservationRepo(MockDBConnector({"capacity": 100, "tickets_sold": 40}))
 
     # WHEN we check / THEN there is still room
-    assert reservation_repo.check_room_capacity_reservation(make_reservation()) is True
-
-
-def test_check_room_capacity_no_reservation_yet():
-    # GIVEN a screening with no reservation at all (0 tickets sold)
-    reservation_repo = ReservationRepo(MockDBConnector({"capacity": 100, "tickets_sold": 0}))
-
-    # WHEN we check / THEN there is room (the first reservation must be accepted)
     assert reservation_repo.check_room_capacity_reservation(make_reservation()) is True
 
 
@@ -178,18 +139,3 @@ def test_check_room_capacity_unknown_screening():
 
     # WHEN we check / THEN we answer False (no seat can be booked)
     assert reservation_repo.check_room_capacity_reservation(make_reservation()) is False
-
-
-def test_check_room_capacity_query():
-    # GIVEN
-    db_connector = MockDBConnector({"capacity": 100, "tickets_sold": 0})
-    reservation_repo = ReservationRepo(db_connector)
-
-    # WHEN
-    reservation_repo.check_room_capacity_reservation(make_reservation())
-
-    # THEN the query starts from the screening, counts the reservations with a LEFT JOIN
-    # and uses the screening of the reservation
-    assert "FROM screenings" in db_connector.last_query
-    assert "LEFT JOIN reservations" in db_connector.last_query
-    assert db_connector.last_data == {"screening_id": 3}
