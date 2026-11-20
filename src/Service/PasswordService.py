@@ -1,12 +1,10 @@
 """Functions to hash and check passwords, and to validate the credentials of a login."""
 
-from pydantic._internal._utils import ValueItems
 import hashlib
 import secrets
-from typing import Optional
 
-from src.DAO.UserRepo import UserRepo
 from src.Business_object.User import User
+from src.DAO.UserRepo import UserRepo
 
 
 def hash_password(password: str, salt="") -> str:
@@ -36,7 +34,7 @@ def check_password_strength(password: str):
         password (str): The password to check.
     """
     if len(password) < 8:
-        raise Exception("Password length must be at least 8 characters")
+        raise ValueError("Password length must be at least 8 characters")
 
 
 def compare_password(password, salt, hash):

@@ -3,6 +3,8 @@ from typing import Optional
 
 
 class User:
+    """A user account (customer or administrator). Only the hash of the password and its salt are saved."""
+
     def __init__(
         self,
         username: str,

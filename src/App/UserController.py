@@ -1,34 +1,56 @@
-from src.Service.PasswordService import WrongPasswordError
-from src.Service.PasswordService import UnknownUsernameError
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
+from psycopg2.errors import UniqueViolation
 
 from src.Business_object.User import User
 from src.Model.APIUser import APIUser
 from src.Model.JWTResponse import JWTResponse
 from src.Model.UserModel import ChangeUserPasswordModel, UpdateUserModel, UserModel
-from src.Service.PasswordService import check_password_strength, validate_username_password
-from src.Service.UserService import UserService
+from src.Service.PasswordService import UnknownUsernameError, WrongPasswordError, validate_username_password
 
 from .init_app import jwt_service, user_repo, user_service
 from .JWTBearer import JWTBearer
 
-if TYPE_CHECKING:
-    from src.Model.User import User
+# ---------- Helpers used by every protected route ----------
+
+
+def to_api_user(user: User) -> APIUser:
+    """Keep only the public fields of a user (id and username), to send them in a response.
+    Args:
+        user (User): A user read from the database (so they always have an id).
+    Returns:
+        The APIUser of this user.
+    """
+    # pyrefly: ignore
+    return APIUser(username=user.username, id=user.id)
 
 
 def get_user_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIUser:
+    """Find the logged-in user from the token sent with the request.
+    Args:
+        credentials (HTTPAuthorizationCredentials): The token, already checked by JWTBearer.
+    Returns:
+        The APIUser (id and username) of the logged-in user.
+        Raises a 404 error if the user of the token does not exist anymore (account deleted).
+    """
     token = credentials.credentials
     user_id = int(jwt_service.validate_user_jwt(token))
     user: User | None = user_repo.get_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return APIUser(id=user.id, username=user.username)
+    return to_api_user(user)
 
 
 def get_admin_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIUser:
+    """Find the logged-in user from the token, and check that they are an administrator.
+    Args:
+        credentials (HTTPAuthorizationCredentials): The token, already checked by JWTBearer.
+    Returns:
+        The APIUser (id and username) of the administrator.
+        Raises a 404 error if the user does not exist, and a 403 error if they are not an administrator.
+    """
     token = credentials.credentials
     user_id = int(jwt_service.validate_user_jwt(token))
     user: User | None = user_repo.get_by_id(user_id)
@@ -36,14 +58,19 @@ def get_admin_from_credentials(credentials: HTTPAuthorizationCredentials) -> API
         raise HTTPException(status_code=404, detail="User not found")
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Admin privileges required")
-    return APIUser(id=user.id, username=user.username)
+    return to_api_user(user)
 
 
 def require_admin(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
 ) -> APIUser:
+    """Dependency of the admin routers (dependencies=[Depends(require_admin)]):
+    the route is only run if the request comes from a logged-in administrator.
+    """
     return get_admin_from_credentials(credentials)
 
+
+# ---------- Routes ----------
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -57,18 +84,19 @@ admin_user_router = APIRouter(
 @user_router.post("/", summary="Create a user", status_code=status.HTTP_201_CREATED)
 def create_user(u: UserModel) -> APIUser:
     """
-    Register a new user. The username must be unique and the password must have a length >= 8.
+    Register a new user. The username and the email must be unique, and the password must have at least 8 characters.
     """
+    new_user = User(u.username, u.email, u.password, u.first_name, u.last_name)
     try:
-        check_password_strength(password=u.password)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Password must have a lenght >= 8") from Exception
-    try:
-        user: User = UserService().create_user(User(u.username, u.email, u.password, u.first_name, u.last_name))
-    except Exception as error:
-        raise HTTPException(status_code=409, detail="Username already exists") from error
+        user = user_service.create_user(new_user)
+    except ValueError as error:
+        # Password too short
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    except UniqueViolation as error:
+        # The database refuses a username or an email that is already used
+        raise HTTPException(status_code=409, detail="Username or email already in use") from error
 
-    return APIUser(id=user.id, username=user.username)
+    return to_api_user(user)
 
 
 @user_router.post("/jwt", summary="Login", status_code=status.HTTP_200_OK)
@@ -97,19 +125,29 @@ def login(username: str, password: str) -> JWTResponse:
             headers={"WWW-Authenticate": "Bearer"},
         ) from error
 
+    # A user read from the database always has an id
+    # pyrefly: ignore
     return jwt_service.encode_jwt(user.id)
 
 
 @admin_user_router.get("/", summary="List users")
-def list_users(credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())]) -> list[APIUser]:
+def list_users() -> list[APIUser]:
     """
-    List all the users.
+    List all the users (administrators only).
     """
     users = user_service.get_all()
-    return [APIUser(id=u.id, username=u.username) for u in users]
+    return [to_api_user(user) for user in users]
 
 
-@user_router.put("/me", summary="Update own profile", dependencies=[Depends(JWTBearer())])
+@user_router.get("/me", summary="Get own profile")
+def get_own_profile(credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())]) -> APIUser:
+    """
+    Get the profile (id and username) of the logged-in user.
+    """
+    return get_user_from_credentials(credentials)
+
+
+@user_router.put("/me", summary="Update own profile")
 def update_own_profile(
     u: UpdateUserModel, credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())]
 ) -> APIUser:
@@ -131,10 +169,10 @@ def update_own_profile(
         )
     except ValueError as error:
         raise HTTPException(status_code=404, detail="User not found") from error
-    except Exception as error:
+    except UniqueViolation as error:
         raise HTTPException(status_code=409, detail="Username or email already in use") from error
 
-    return APIUser(id=user.id, username=user.username)
+    return to_api_user(user)
 
 
 @user_router.put("/me/password", summary="Change own password", status_code=status.HTTP_204_NO_CONTENT)
@@ -143,7 +181,8 @@ def change_own_password(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
 ) -> None:
     """
-    Change the password of the logged-in user. The current password must be given, and the new one must have a length >= 8.
+    Change the password of the logged-in user.
+    The current password must be given, and the new one must have at least 8 characters.
 
     Args:
 
@@ -155,16 +194,17 @@ def change_own_password(
     except PermissionError as error:
         raise HTTPException(status_code=403, detail="Wrong current password") from error
     except ValueError as error:
-        raise HTTPException(status_code=400, detail="Password too weak") from error
+        # New password too short
+        raise HTTPException(status_code=400, detail=str(error)) from error
 
 
-@user_router.delete("/me", summary="Delete own profile", dependencies=[Depends(JWTBearer())])
+@user_router.delete("/me", summary="Delete own profile", status_code=status.HTTP_204_NO_CONTENT)
 def delete_own_profile(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())],
     confirm: bool = False,
 ) -> None:
     """
-    Delete the profile of the logged-in user, with all his reservations.
+    Delete the profile of the logged-in user, with all their reservations and reviews.
 
     Args:
 
@@ -177,36 +217,8 @@ def delete_own_profile(
         )
     current_user = get_user_from_credentials(credentials)
     try:
-        succes = user_service.delete_user(current_user.id)
+        is_deleted = user_service.delete_user(current_user.id)
     except ValueError as error:
         raise HTTPException(status_code=404, detail="User not found") from error
-    except Exception as error:
-        raise HTTPException(status_code=409, detail="Username or email already in use") from error
-
-
-@user_router.get("/me", summary="Get user own profile", dependencies=[Depends(JWTBearer())])
-def get_user_own_profile(credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())]) -> APIUser:
-    """
-    Get the profile (id and username) of the logged-in user.
-    """
-    return get_user_from_credentials(credentials)
-
-
-def get_user_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIUser:
-    token = credentials.credentials
-    user_id = int(jwt_service.validate_user_jwt(token))
-    user: User | None = user_repo.get_by_id(user_id)
-    if not user:
+    if not is_deleted:
         raise HTTPException(status_code=404, detail="User not found")
-    return APIUser(id=user.id, username=user.username)
-
-
-def get_admin_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIUser:
-    token = credentials.credentials
-    user_id = int(jwt_service.validate_user_jwt(token))
-    user: User | None = user_repo.get_by_id(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Admin privileges required")
-    return APIUser(id=user.id, username=user.username)

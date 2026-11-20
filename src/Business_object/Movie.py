@@ -2,6 +2,8 @@ from typing import Optional
 
 
 class Movie:
+    """A movie of the catalogue, imported from TMDB (tmdb_id) and saved in our database (id)."""
+
     def __init__(
         self,
         tmdb_id: int,

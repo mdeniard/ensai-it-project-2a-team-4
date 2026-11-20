@@ -3,6 +3,8 @@ from typing import Optional
 
 
 class Screening:
+    """A screening: a movie shown in a room at a given time, with the base price of a ticket."""
+
     def __init__(
         self,
         movie_id: int,

@@ -1,48 +1,140 @@
-# Prerequisite:  PDM 
+# Cinéville Bruz API
 
-Install PDM for your user with pip 
+Backend API of a movie theater, developed for the 2nd year IT project at ENSAI (team 4).
 
-`> pip install --user pdm`
+- **Customers** create an account, look at the upcoming screenings, book tickets and review the movies they have seen.
+- **Administrators** import movies from [TMDB](https://www.themoviedb.org/), manage the rooms, plan the screenings and follow the revenue (accounting).
 
-Check your PDM version with 
+This file explains how to **install, run and use** the application.
+If you want to work on the code, read the developer guide: [src/README.md](src/README.md).
 
-`> pdm --version`
+---
 
-Optionally, use uv "under the hood" for faster installation: 
+## 1. Prerequisites
 
-`> pip install --user uv`
+| Tool | Version | Check with |
+|---|---|---|
+| Python | 3.14 | `python --version` |
+| PDM (package manager) | 2.x | `pdm --version` |
+| PostgreSQL | 14 or more | an empty database you can connect to (for example with pgAdmin) |
+| TMDB API key | – | free, from your account settings on [themoviedb.org](https://www.themoviedb.org/settings/api) |
 
-`> pdm config use_uv true`
+Install PDM if needed:
 
-## Note for Onyxia/k8s users
+```bash
+pip install --user pdm
+```
 
-The installation can be handled by the setup script `init_project.sh`.
+> Onyxia / VSCode-server users: the script `init_project.sh` installs PDM for you. Open the port `8000` in the `Network access` configuration of your service.
 
-You can provide that configuration file as a custom initialization script for your vscode image. 
+## 2. Install the application
 
-Be sure to provide the ports used by the app in the `Network access` configuration. For example, this app uses the `8000` port.
+From the root of the project:
 
-# How to install the app 
+```bash
+pdm install
+```
 
-`> pdm install`
+This creates a virtual environment and installs all the dependencies listed in `pdm.lock`.
 
-That's all 😊
+## 3. Configure the application
 
-# How to set up the database
+Copy the example file and fill it in:
 
-1. Create a PostgreSQL database (for example with pgAdmin)
-2. Copy `.env.sample` to `.env` and fill in your database information and your TMDB API key (`TMDB_API_KEY`)
-3. Run the scripts on your database (pgAdmin > Query Tool):
-   - `sql/test_init_db.sql` creates the `test` schema with empty tables (to test the app without touching the demo data)
-   - `sql/production_init_db.sql` creates the `production` schema with demo data (movies, users, rooms, screenings, ticket types)
-4. In your `.env`, set `POSTGRES_SCHEMA` to `test` or `production`, then restart the app
+```bash
+cp .env.sample .env
+```
 
-⚠️ The tables are defined in both scripts: when you change a table, change it in both files.
+| Variable | What to put |
+|---|---|
+| `POSTGRES_HOST` | address of your PostgreSQL server (e.g. `localhost`) |
+| `POSTGRES_PORT` | its port (usually `5432`) |
+| `POSTGRES_DATABASE` | name of your database |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` | your PostgreSQL login |
+| `POSTGRES_SCHEMA` | `production` (demo data, recommended) or `test` (empty tables) |
+| `JWT_SECRET` | any long random text, used to sign the login tokens |
+| `TMDB_API_KEY` | your TMDB API key |
 
-# How to run the app 
+## 4. Create the tables
 
-```> pdm start```
+The application uses one PostgreSQL schema, chosen with `POSTGRES_SCHEMA`:
 
-This starts a server accessible on `localhost:8000`
+- `production`: the tables **with demo data** (movies, rooms, screenings, ticket types, users including an administrator);
+- `test`: the same tables, **empty**.
 
-The API is then documented on `localhost:8000/docs`
+**Option A – one command (recommended).** It creates the schema written in your `.env`:
+
+```bash
+pdm run python -m src.App.reset_database
+```
+
+Type `yes` to confirm.
+⚠️ If the schema already exists, all its data is erased and replaced by the initial data.
+
+**Option B – with pgAdmin.** Open the Query Tool on your database and run `sql/production_init_db.sql` (or `sql/test_init_db.sql`).
+
+## 5. Run the application
+
+```bash
+pdm start
+```
+
+The API is available on <http://localhost:8000>.
+Open **<http://localhost:8000/docs>** to see and try every route (Swagger interface).
+
+## 6. Use the API
+
+### Log in
+
+1. In `/docs`, call `POST /users/jwt` with a username and a password.
+2. Copy the token from the answer.
+3. Click **Authorize** (top right) and paste the token.
+4. You can now call the protected routes.
+
+Demo accounts (schema `production` only):
+
+| Username | Password | Role |
+|---|---|---|
+| `admin` | `admin#26` | administrator |
+| `john` | `john_johnson&26` | customer |
+| `mary` | `mary_smith&26` | customer |
+
+You can also create your own customer account with `POST /users/`.
+
+### Main routes
+
+| Who | Route | What it does |
+|---|---|---|
+| Everyone | `GET /screenings/` | list the upcoming screenings |
+| Everyone | `GET /movies/` | list the movies on show |
+| Everyone | `GET /ticket-types/` | list the ticket types you can book (normal, student…) |
+| Everyone | `GET /reviews/movies/{movie_id}` | read the reviews of a movie |
+| Customer | `POST /reservations/` | book a ticket (screening + ticket type) |
+| Customer | `GET /reservations/me` | see my bookings and the price paid |
+| Customer | `POST /reviews/` | review a movie I have seen (rating from 1 to 10) |
+| Customer | `GET` / `PUT` / `DELETE /users/me` | see, update or delete my account |
+| Admin | `/admin/movies/...` | search movies on TMDB and import them |
+| Admin | `/admin/rooms/...` | manage the rooms |
+| Admin | `/admin/screenings/...` | plan or delete screenings |
+| Admin | `/admin/accounting/...` | revenue and tickets sold, per movie or per period |
+| Admin | `/admin/users/`, `/admin/reviews/...` | list users, delete any review |
+
+### Prices
+
+The price of a ticket = **base price of the screening × multiplier of the ticket type**.
+It is computed by the server when booking, and stored with the booking.
+
+## 7. Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| `KeyError: 'POSTGRES_HOST'` (or another variable) | the `.env` file is missing or a variable is empty (step 3) |
+| `relation "..." does not exist` | the tables of the schema in `POSTGRES_SCHEMA` were not created (step 4) |
+| `connection refused` | PostgreSQL is not running, or the host / port in `.env` is wrong |
+| The admin routes answer `403` | log in with an administrator account and click **Authorize** |
+| The list of screenings is empty | the `test` schema has no data: use `production`, or create screenings as an admin |
+| Port 8000 already in use | stop the other program using this port |
+
+## 8. Team
+
+Imen Boulabiar, Malo Deniard, Anna Olofsson, Céleste Rayzal. Tutor: Clément Valot.

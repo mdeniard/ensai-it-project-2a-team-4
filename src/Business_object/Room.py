@@ -2,6 +2,8 @@ from typing import Optional
 
 
 class Room:
+    """A room of the cinema, with its number and its capacity (number of seats)."""
+
     def __init__(self, room_number: int, capacity: int, id: Optional[int] = None):
         self.id = id
         self.room_number = room_number

@@ -3,6 +3,8 @@ from typing import Optional
 
 
 class UserModel(BaseModel):
+    """Body of the request to register a new user."""
+
     username: str
     email: str
     password: str
@@ -11,6 +13,8 @@ class UserModel(BaseModel):
 
 
 class UpdateUserModel(BaseModel):
+    """Body of the request to update one's profile (first and last names are optional)."""
+
     username: str
     email: str
     first_name: Optional[str] = None
@@ -18,5 +22,7 @@ class UpdateUserModel(BaseModel):
 
 
 class ChangeUserPasswordModel(BaseModel):
+    """Body of the request to change one's password."""
+
     old_password: str
     new_password: str

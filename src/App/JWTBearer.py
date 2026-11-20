@@ -6,7 +6,16 @@ from .init_app import jwt_service
 
 
 class JWTBearer(HTTPBearer):
+    """Check the token of the protected routes (used with Depends(JWTBearer())).
+    The request is refused (403) if there is no token, if it is not a Bearer token,
+    or if the token is invalid or expired.
+    """
+
     def __init__(self, auto_error: bool = True):
+        """Create the checker.
+        Args:
+            auto_error (bool): If True (default), a request without token is refused automatically.
+        """
         super(JWTBearer, self).__init__(auto_error=auto_error)
 
     async def __call__(self, request: Request) -> HTTPAuthorizationCredentials:

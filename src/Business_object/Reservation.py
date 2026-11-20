@@ -4,6 +4,8 @@ from typing import Optional
 
 
 class Reservation:
+    """A booking of one ticket by a customer for a screening, with the type of ticket and the price paid."""
+
     def __init__(
         self,
         customer_id: int,

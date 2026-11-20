@@ -2,17 +2,20 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
-from .MovieController import movie_router, admin_movie_router
-from .UserController import user_router, admin_user_router
-from .RoomController import room_router, admin_room_router
-from .ScreeningController import screening_router, admin_screening_router
-from .ReservationController import reservation_router
 from .AccountingController import admin_accounting_router
+from .MovieController import admin_movie_router, movie_router
+from .ReservationController import reservation_router
+from .ReviewController import admin_review_router, review_router
+from .RoomController import admin_room_router, room_router
+from .ScreeningController import admin_screening_router, screening_router
 from .TicketTypeController import ticket_type_router
-from .ReviewController import review_router, admin_review_router
+from .UserController import admin_user_router, user_router
 
 
 def run_app():
+    """Create the FastAPI application, add all the routers (public and admin)
+    and start the server on the port 8000.
+    """
     app = FastAPI(
             title="IT Project 2A",
             version="1.0.0",

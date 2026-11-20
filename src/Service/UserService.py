@@ -1,8 +1,8 @@
 from typing import Optional
 
-from src.DAO.UserRepo import UserRepo
 from src.Business_object.User import User
-from src.Service.PasswordService import check_password_strength, create_salt, hash_password, compare_password
+from src.DAO.UserRepo import UserRepo
+from src.Service.PasswordService import check_password_strength, compare_password, create_salt, hash_password
 
 
 class UserService:
@@ -27,7 +27,8 @@ class UserService:
         return self.user_repo.get_all()
 
     def create_user(self, user: User) -> User:
-        """Register a new user. The password is never saved as it is: a random salt is created
+        """Register a new user. The password must have at least 8 characters.
+        The password is never saved as it is: a random salt is created
         and only the hash of the password and the salt is saved.
         Args:
             user (User): The user to create. Its password_hash field must still contain
@@ -35,6 +36,9 @@ class UserService:
         Returns:
             The saved User, with its id.
         """
+        # The password is refused if it is too short (ValueError)
+        check_password_strength(password=user.password_hash)
+
         user.salt = create_salt()
         user.password_hash = hash_password(password=user.password_hash, salt=user.salt)
         return self.user_repo.create_user(user)
@@ -54,7 +58,7 @@ class UserService:
         """
         existing_user = self.user_repo.get_by_id(user_id)
         if not existing_user:
-            raise ValueError("Utilisateur introuvable")
+            raise ValueError("User not found")
 
         existing_user.username = username
         existing_user.email = email
@@ -94,7 +98,7 @@ class UserService:
             True if the user was deleted.
         """
         if not self.user_repo.get_by_id(user_id):
-            raise ValueError("Utilisateur introuvable")
+            raise ValueError("User not found")
         return self.user_repo.delete_user(user_id)
 
     def get_user(self, user_id: int) -> User | None:

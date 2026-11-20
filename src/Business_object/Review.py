@@ -3,6 +3,8 @@ from typing import Optional
 
 
 class Review:
+    """The review of a movie by a customer: a rating from 1 to 10 and an optional comment."""
+
     def __init__(
         self,
         customer_id: int,

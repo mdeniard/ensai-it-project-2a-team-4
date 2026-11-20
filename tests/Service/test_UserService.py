@@ -73,6 +73,18 @@ def test_create_user_never_saves_the_password():
     assert saved_user.password_hash == hash_password("soleil1234", saved_user.salt)
 
 
+def test_create_user_password_too_short():
+    # GIVEN a new user who wrote a password of less than 8 characters
+    user_repo = MockUserRepo()
+    user_service = UserService(user_repo)
+    new_user = User("bob", "bob@test.fr", "court", "Bob", "Durand")
+
+    # WHEN he registers / THEN ValueError and nothing is saved
+    with pytest.raises(ValueError, match="at least 8 characters"):
+        user_service.create_user(new_user)
+    assert user_repo.created_user is None
+
+
 # ---------- update_user ----------
 
 
@@ -149,7 +161,7 @@ def test_change_password_new_password_too_short():
     user_service = UserService(user_repo)
 
     # WHEN her new password has less than 8 characters / THEN it is refused and nothing is saved
-    with pytest.raises(Exception, match="at least 8 characters"):
+    with pytest.raises(ValueError, match="at least 8 characters"):
         user_service.change_password(5, "soleil1234", "court")
     assert user_repo.new_password is None
 
