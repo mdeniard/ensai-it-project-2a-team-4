@@ -9,7 +9,7 @@ from src.Business_object.TicketType import TicketType
 from src.Business_object.User import User
 from src.Service.ReservationService import ReservationService
 
-# These tests use fake repos instead of the database (like the MockDBConnector in tests/DAO/test_UserRepo.py)
+# These tests use fake repos instead of the database
 
 NOW = datetime.now(timezone.utc)
 
