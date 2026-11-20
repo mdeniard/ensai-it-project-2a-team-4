@@ -34,7 +34,7 @@ distribution = false
 [tool.pdm.scripts]
 lint = "ruff check"
 format = "ruff format"
-test = "pytest tests --cov=src"
+test = "pytest tests --cov-report=term-missing --cov=src"
 start = "pdm run __main__.py"
 typecheck = "pyrefly check"
 

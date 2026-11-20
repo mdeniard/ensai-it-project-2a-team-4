@@ -54,6 +54,61 @@ class MockUserRepo:
         return True
 
 
+# ---------- get_all ----------
+
+
+def test_get_all_returns_users():
+    # GIVEN the repository has some users
+    user_repo = MockUserRepo()
+    user_repo.get_all = lambda: [user_repo.alice]
+    user_service = UserService(user_repo)
+
+    # WHEN we list the users
+    result = user_service.get_all()
+
+    # THEN we get them
+    assert result == [user_repo.alice]
+
+
+def test_get_all_returns_empty_list_when_no_users():
+    # GIVEN there is no user in the database
+    user_repo = MockUserRepo()
+    user_repo.get_all = lambda: []
+    user_service = UserService(user_repo)
+
+    # WHEN we list the users
+    result = user_service.get_all()
+
+    # THEN we get an empty list
+    assert result == []
+
+
+# ---------- get_user ----------
+
+
+def test_get_user_returns_user_when_found():
+    # GIVEN alice exists
+    user_repo = MockUserRepo()
+    user_service = UserService(user_repo)
+
+    # WHEN we look her up by id
+    result = user_service.get_user(5)
+
+    # THEN we get her
+    assert result == user_repo.alice
+
+
+def test_get_user_returns_none_when_not_found():
+    # GIVEN user 99 does not exist
+    user_repo = MockUserRepo()
+    user_service = UserService(user_repo)
+
+    # WHEN we look him up by id
+    result = user_service.get_user(99)
+
+    # THEN we get None
+    assert result is None
+
 # ---------- create_user ----------
 
 

@@ -27,6 +27,15 @@ class MockMovieRepo:
         self.movies_in_database = movies_in_database
         self.create_was_called = False
 
+    def get_screening_movies(self):
+        return self.movies_in_database
+
+    def get_by_id(self, movie_id):
+        for movie in self.movies_in_database:
+            if movie.id == movie_id:
+                return movie
+        return None
+
     def get_by_tmdb_id(self, tmdb_id):
         for movie in self.movies_in_database:
             if movie.tmdb_id == tmdb_id:
@@ -35,10 +44,23 @@ class MockMovieRepo:
 
     def create(self, movie):
         self.create_was_called = True
-        # The database would give an id to the new movie
         movie.id = len(self.movies_in_database) + 1
         self.movies_in_database.append(movie)
         return movie
+
+    def update(self, movie):
+        for i, existing in enumerate(self.movies_in_database):
+            if existing.id == movie.id:
+                self.movies_in_database[i] = movie
+                return movie
+        return None
+
+    def delete(self, movie_id):
+        for i, movie in enumerate(self.movies_in_database):
+            if movie.id == movie_id:
+                self.movies_in_database.pop(i)
+                return True
+        return False
 
 
 class MockMovieDBConnector:
@@ -137,3 +159,122 @@ def test_import_from_tmdb_unknown_movie():
     # THEN we get None and nothing was saved
     assert movie is None
     assert not movie_repo.create_was_called
+
+# ---------- get_screening_movies ----------
+
+
+def test_get_screening_movies_returns_all():
+    # GIVEN the database has 2 movies
+    movie_repo = MockMovieRepo([
+        make_wild_robot(movie_id=1),
+        Movie(tmdb_id=2, title="Other", description="x", duration=90, released_date="2020-01-01", rating=7.0, poster_url=None, id=2),
+    ])
+    movie_service = MovieService(movie_repo, MockMovieDBConnector())
+
+    # WHEN we list all movies
+    result = movie_service.get_screening_movies()
+
+    # THEN we get them
+    assert len(result) == 2
+
+
+def test_get_screening_movies_returns_empty_list():
+    # GIVEN the database is empty
+    movie_service = MovieService(MockMovieRepo([]), MockMovieDBConnector())
+
+    # WHEN we list all movies / THEN we get an empty list
+    assert movie_service.get_screening_movies() == []
+
+
+# ---------- get_by_id ----------
+
+
+def test_get_by_id_returns_movie_when_found():
+    # GIVEN movie 1 exists
+    movie_repo = MockMovieRepo([make_wild_robot(movie_id=1)])
+    movie_service = MovieService(movie_repo, MockMovieDBConnector())
+
+    # WHEN we look it up by id
+    result = movie_service.get_by_id(1)
+
+    # THEN we get it
+    assert result.title == "The Wild Robot"
+
+
+def test_get_by_id_returns_none_when_not_found():
+    # GIVEN movie 99 does not exist
+    movie_service = MovieService(MockMovieRepo([make_wild_robot(movie_id=1)]), MockMovieDBConnector())
+
+    # WHEN we look it up / THEN we get None
+    assert movie_service.get_by_id(99) is None
+
+
+# ---------- create_movie ----------
+
+
+def test_create_movie_ok():
+    # GIVEN the admin enters a movie by hand
+    movie_repo = MockMovieRepo([])
+    movie_service = MovieService(movie_repo, MockMovieDBConnector())
+    new_movie = Movie(tmdb_id=2, title="Other", description="x", duration=90, released_date="2020-01-01", rating=7.0, poster_url=None)
+
+    # WHEN the admin saves it
+    created = movie_service.create_movie(new_movie)
+
+    # THEN it is saved and returned with its id
+    assert created.id == 1
+    assert created.title == "Other"
+    assert movie_repo.create_was_called is True
+
+
+# ---------- update_movie ----------
+
+
+def test_update_movie_ok():
+    # GIVEN movie 1 exists
+    movie_repo = MockMovieRepo([make_wild_robot(movie_id=1)])
+    movie_service = MovieService(movie_repo, MockMovieDBConnector())
+
+    # WHEN the admin updates its title
+    updated_movie = make_wild_robot(movie_id=1)
+    updated_movie.title = "The Wild Robot (Remastered)"
+    updated = movie_service.update_movie(updated_movie)
+
+    # THEN the update is saved and returned
+    assert updated.title == "The Wild Robot (Remastered)"
+    assert movie_repo.movies_in_database[0].title == "The Wild Robot (Remastered)"
+
+
+def test_update_movie_returns_none_when_not_found():
+    # GIVEN movie 99 does not exist
+    movie_repo = MockMovieRepo([make_wild_robot(movie_id=1)])
+    movie_service = MovieService(movie_repo, MockMovieDBConnector())
+
+    # WHEN we update it / THEN we get None
+    updated_movie = make_wild_robot(movie_id=99)
+    assert movie_service.update_movie(updated_movie) is None
+
+
+# ---------- delete_movie ----------
+
+
+def test_delete_movie_ok():
+    # GIVEN movie 1 exists
+    movie_repo = MockMovieRepo([make_wild_robot(movie_id=1)])
+    movie_service = MovieService(movie_repo, MockMovieDBConnector())
+
+    # WHEN the admin deletes it
+    result = movie_service.delete_movie(1)
+
+    # THEN it is deleted
+    assert result is True
+    assert len(movie_repo.movies_in_database) == 0
+
+
+def test_delete_movie_returns_false_when_not_found():
+    # GIVEN movie 99 does not exist
+    movie_repo = MockMovieRepo([make_wild_robot(movie_id=1)])
+    movie_service = MovieService(movie_repo, MockMovieDBConnector())
+
+    # WHEN the admin deletes it / THEN we get False
+    assert movie_service.delete_movie(99) is False

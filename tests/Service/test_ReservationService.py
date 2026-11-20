@@ -254,3 +254,59 @@ def test_create_reservation_uses_base_price_of_the_screening():
 
     # THEN he pays 9.50 x 0.7 = 6.65
     assert created.price_paid == Decimal("6.65")
+
+# ---------- get_by_id ----------
+
+
+def test_get_by_id_returns_reservation_when_found():
+    # GIVEN reservation 7 exists
+    reservation_repo = MockReservationRepo()
+    reservation_repo.get_by_id = lambda rid: (
+        Reservation(customer_id=5, screening_id=1, ticket_type_id=1, id=7) if rid == 7 else None
+    )
+    reservation_service = make_service(reservation_repo)
+
+    # WHEN we look it up
+    result = reservation_service.get_by_id(7)
+
+    # THEN we get it
+    assert result.id == 7
+
+
+def test_get_by_id_returns_none_when_not_found():
+    # GIVEN reservation 99 does not exist
+    reservation_repo = MockReservationRepo()
+    reservation_repo.get_by_id = lambda rid: None
+    reservation_service = make_service(reservation_repo)
+
+    # WHEN we look it up / THEN we get None
+    assert reservation_service.get_by_id(99) is None
+
+
+# ---------- get_customer_reservation ----------
+
+
+def test_get_customer_reservation_returns_reservations():
+    # GIVEN customer 5 has 2 reservations
+    reservation_repo = MockReservationRepo()
+    reservation_repo.get_customer_reservations = lambda cid: [
+        Reservation(customer_id=5, screening_id=1, ticket_type_id=1, id=1),
+        Reservation(customer_id=5, screening_id=3, ticket_type_id=3, id=2),
+    ]
+    reservation_service = make_service(reservation_repo)
+
+    # WHEN we list the customer's reservations
+    result = reservation_service.get_customer_reservation(5)
+
+    # THEN we get them
+    assert len(result) == 2
+
+
+def test_get_customer_reservation_returns_empty_list():
+    # GIVEN customer 99 has no reservation
+    reservation_repo = MockReservationRepo()
+    reservation_repo.get_customer_reservations = lambda cid: []
+    reservation_service = make_service(reservation_repo)
+
+    # WHEN we list the customer's reservations / THEN we get an empty list
+    assert reservation_service.get_customer_reservation(99) == []
