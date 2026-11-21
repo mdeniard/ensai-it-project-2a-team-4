@@ -6,8 +6,6 @@ from .DBConnector import DBConnector
 
 
 class ReviewRepo:
-    """Repository that manages the reviews in the database (table reviews)."""
-
     db_connector: DBConnector
 
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:

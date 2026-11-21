@@ -1,13 +1,13 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from src.Business_object.Review import Review
 from src.DAO.MovieRepo import MovieRepo
 from src.DAO.ReviewRepo import ReviewRepo
 
+if TYPE_CHECKING:
+    from src.Business_object.Review import Review
+
 
 class ReviewService:
-    """Service that manages the reviews of the movies written by the customers."""
-
     def __init__(
         self,
         review_repo: Optional[ReviewRepo] = None,

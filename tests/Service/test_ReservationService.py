@@ -255,6 +255,7 @@ def test_create_reservation_uses_base_price_of_the_screening():
     # THEN he pays 9.50 x 0.7 = 6.65
     assert created.price_paid == Decimal("6.65")
 
+
 # ---------- get_by_id ----------
 
 

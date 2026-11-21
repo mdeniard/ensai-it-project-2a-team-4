@@ -1,11 +1,13 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from src.Business_object.Movie import Movie
-from src.Model.MovieModel import MovieModel
-from src.Service.MovieService import MovieService
 from src.App.UserController import require_admin
+from src.Business_object.Movie import Movie
+from src.Service.MovieService import MovieService
+
+if TYPE_CHECKING:
+    from src.Model.MovieModel import MovieModel
 
 movie_router = APIRouter(prefix="/movies", tags=["Movies"])
 

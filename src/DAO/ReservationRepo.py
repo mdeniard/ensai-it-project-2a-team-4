@@ -1,14 +1,14 @@
-from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from src.Business_object.Reservation import Reservation
 
 from .DBConnector import DBConnector
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
 
 class ReservationRepo:
-    """Repository that manages the reservations in the database (table reservations)."""
-
     db_connector: DBConnector
 
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:

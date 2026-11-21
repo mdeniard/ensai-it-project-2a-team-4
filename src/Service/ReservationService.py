@@ -1,17 +1,17 @@
 from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from src.Business_object.Reservation import Reservation
 from src.DAO.ReservationRepo import ReservationRepo
 from src.DAO.ScreeningRepo import ScreeningRepo
 from src.DAO.TicketTypeRepo import TicketTypeRepo
 from src.DAO.UserRepo import UserRepo
 
+if TYPE_CHECKING:
+    from src.Business_object.Reservation import Reservation
+
 
 class ReservationService:
-    """Service that manages the reservations (booking of tickets and price computation)."""
-
     def __init__(
         self,
         reservation_repo: Optional[ReservationRepo] = None,

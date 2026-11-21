@@ -2,8 +2,6 @@
 
 from unittest.mock import Mock, patch
 
-import pytest
-
 from src.Business_object.Room import Room
 from src.Service.RoomService import RoomService
 

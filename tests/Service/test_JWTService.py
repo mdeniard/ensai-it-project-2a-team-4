@@ -31,8 +31,6 @@ def test_decode_jwt():
     )
 
 
-
-
 @freeze_time("2024-08-26 12:00:00")
 def test_init_reads_secret_from_environment():
     # GIVEN no secret is passed to the constructor

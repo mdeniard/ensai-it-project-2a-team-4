@@ -1,13 +1,13 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from src.Business_object.User import User
 from src.DAO.UserRepo import UserRepo
 from src.Service.PasswordService import check_password_strength, compare_password, create_salt, hash_password
 
+if TYPE_CHECKING:
+    from src.Business_object.User import User
+
 
 class UserService:
-    """Service that manages the users (registration, profile and password)."""
-
     def __init__(
         self,
         user_repo: Optional[UserRepo] = None,

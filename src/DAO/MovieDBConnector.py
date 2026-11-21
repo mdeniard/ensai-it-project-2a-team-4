@@ -12,8 +12,6 @@ TMDB_POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500"
 
 
 class MovieDBConnector:
-    """Retrieves movie information from the TMDB API."""
-
     api_key: Optional[str]
 
     def __init__(self, api_key: Optional[str] = None) -> None:

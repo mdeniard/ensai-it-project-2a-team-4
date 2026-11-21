@@ -6,8 +6,6 @@ from .DBConnector import DBConnector
 
 
 class MovieRepo:
-    """Repository that manages the movies in the database (table movies)."""
-
     db_connector: DBConnector
 
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:
@@ -64,7 +62,8 @@ class MovieRepo:
         raw_created_movie = self.db_connector.sql_query(
             """
             INSERT INTO movies (tmdb_id, title, description, duration, released_date, rating, poster_url)
-            VALUES (%(tmdb_id)s, %(title)s, %(description)s, %(duration)s, %(released_date)s, %(rating)s, %(poster_url)s)
+            VALUES (%(tmdb_id)s, %(title)s, %(description)s, %(duration)s,
+            %(released_date)s, %(rating)s, %(poster_url)s)
             RETURNING *;
             """,
             {

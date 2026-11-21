@@ -1,9 +1,13 @@
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.App.UserController import require_admin
 from src.Business_object.Room import Room
-from src.Model.RoomModel import RoomModel
 from src.Service.RoomService import RoomService
+
+if TYPE_CHECKING:
+    from src.Model.RoomModel import RoomModel
 
 room_router = APIRouter(prefix="/rooms", tags=["Rooms"])
 

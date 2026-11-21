@@ -1,17 +1,20 @@
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials
 from psycopg2.errors import UniqueViolation
 
 from src.Business_object.User import User
 from src.Model.APIUser import APIUser
-from src.Model.JWTResponse import JWTResponse
-from src.Model.UserModel import ChangeUserPasswordModel, UpdateUserModel, UserModel
 from src.Service.PasswordService import UnknownUsernameError, WrongPasswordError, validate_username_password
 
 from .init_app import jwt_service, user_repo, user_service
 from .JWTBearer import JWTBearer
+
+if TYPE_CHECKING:
+    from fastapi.security import HTTPAuthorizationCredentials
+
+    from src.Model.JWTResponse import JWTResponse
+    from src.Model.UserModel import ChangeUserPasswordModel, UpdateUserModel, UserModel
 
 # ---------- Helpers used by every protected route ----------
 

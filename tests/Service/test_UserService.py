@@ -109,6 +109,7 @@ def test_get_user_returns_none_when_not_found():
     # THEN we get None
     assert result is None
 
+
 # ---------- create_user ----------
 
 

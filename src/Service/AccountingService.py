@@ -1,14 +1,14 @@
-from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from src.DAO.MovieRepo import MovieRepo
 from src.DAO.ReservationRepo import ReservationRepo
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
 
 class AccountingService:
-    """Service that manages the accounting (revenue and tickets sold) of the movies."""
-
     def __init__(
         self, reservation_repo: Optional[ReservationRepo] = None, movie_repo: Optional[MovieRepo] = None
     ) -> None:

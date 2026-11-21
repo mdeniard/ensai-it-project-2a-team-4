@@ -1,5 +1,7 @@
-from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class Review:
@@ -23,4 +25,4 @@ class Review:
         self.created_at = created_at
 
     def __str__(self) -> str:
-        return f"Review #{self.id} (Customer: {self.customer_id}, Movie: {self.movie_id}) : {self.rating}/5"
+        return f"Review #{self.id} (Customer: {self.customer_id}, Movie: {self.movie_id}) : {self.rating}/10"

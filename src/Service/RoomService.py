@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from src.Business_object.Room import Room
 from src.DAO.RoomRepo import RoomRepo
+
+if TYPE_CHECKING:
+    from src.Business_object.Room import Room
 
 
 class RoomService:
-    """Service that manages rooms."""
-
     def __init__(
         self,
         room_repo: Optional[RoomRepo] = None,

@@ -6,8 +6,6 @@ from .DBConnector import DBConnector
 
 
 class RoomRepo:
-    """Repository that manages the rooms in the database (table rooms)."""
-
     db_connector: DBConnector
 
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:

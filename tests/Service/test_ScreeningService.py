@@ -123,8 +123,10 @@ class MockMovieRepo:
 
     def get_by_id(self, movie_id):
         if movie_id == 10:
+
             class _Movie:
                 duration = 120  # minutes
+
             return _Movie()
         return None
 
@@ -154,8 +156,11 @@ def make_full_service(screening_repo, movie_repo=None, room_repo=None):
 def test_filter_screenings_no_filters():
     # GIVEN the repo has 2 upcoming screenings
     from src.Business_object.Screening import Screening
+
     screening_repo = MockScreeningRepoFull()
-    screening_repo._filter_result = [Screening(movie_id=1, room_id=1, start_time=None, end_time=None, base_price=10.0, id=1)]
+    screening_repo._filter_result = [
+        Screening(movie_id=1, room_id=1, start_time=None, end_time=None, base_price=10.0, id=1)
+    ]
     service = make_full_service(screening_repo)
 
     # WHEN we list the upcoming screenings without any filter
@@ -181,6 +186,7 @@ def test_filter_screenings_with_movie_id():
 def test_filter_screenings_with_future_day():
     # GIVEN the repo has screenings
     from datetime import date
+
     screening_repo = MockScreeningRepoFull()
     screening_repo._filter_result = []
     service = make_full_service(screening_repo)
@@ -196,6 +202,7 @@ def test_filter_screenings_with_future_day():
 def test_filter_screenings_with_past_day_uses_now():
     # GIVEN the repo has screenings
     from datetime import date
+
     screening_repo = MockScreeningRepoFull()
     screening_repo._filter_result = []
     service = make_full_service(screening_repo)
@@ -214,6 +221,7 @@ def test_filter_screenings_with_past_day_uses_now():
 def test_room_schedule_returns_screenings():
     # GIVEN the repo has 1 screening for room 1
     from src.Business_object.Screening import Screening
+
     screening_repo = MockScreeningRepoFull()
     screening_repo._room_schedule_result = [
         Screening(movie_id=1, room_id=1, start_time=None, end_time=None, base_price=10.0, id=1),
@@ -246,6 +254,7 @@ def test_room_schedule_returns_empty_list():
 def test_create_screening_ok():
     # GIVEN movie 10 (120 min) and room 1 exist, and the room is free
     from datetime import datetime, timezone
+
     screening_repo = MockScreeningRepoFull()
     service = make_full_service(screening_repo)
 
@@ -266,6 +275,7 @@ def test_create_screening_ok():
 def test_create_screening_base_price_zero():
     # GIVEN a valid movie and room
     from datetime import datetime, timezone
+
     screening_repo = MockScreeningRepoFull()
     service = make_full_service(screening_repo)
 
@@ -279,6 +289,7 @@ def test_create_screening_base_price_zero():
 def test_create_screening_base_price_negative():
     # GIVEN a valid movie and room
     from datetime import datetime, timezone
+
     screening_repo = MockScreeningRepoFull()
     service = make_full_service(screening_repo)
 
@@ -292,6 +303,7 @@ def test_create_screening_base_price_negative():
 def test_create_screening_movie_not_found():
     # GIVEN movie 99 does not exist
     from datetime import datetime, timezone
+
     screening_repo = MockScreeningRepoFull()
     service = make_full_service(screening_repo)
 
@@ -305,6 +317,7 @@ def test_create_screening_movie_not_found():
 def test_create_screening_room_not_found():
     # GIVEN room 99 does not exist
     from datetime import datetime, timezone
+
     screening_repo = MockScreeningRepoFull()
     service = make_full_service(screening_repo)
 
@@ -318,6 +331,7 @@ def test_create_screening_room_not_found():
 def test_create_screening_room_already_booked():
     # GIVEN the room is already booked on this time slot
     from datetime import datetime, timezone
+
     screening_repo = MockScreeningRepoFull()
     screening_repo._session_available = False
     service = make_full_service(screening_repo)

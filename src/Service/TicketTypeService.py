@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from src.Business_object.TicketType import TicketType
 from src.DAO.TicketTypeRepo import TicketTypeRepo
+
+if TYPE_CHECKING:
+    from src.Business_object.TicketType import TicketType
 
 
 class TicketTypeService:
-    """Service that manages ticket types (Normal, Child, Student...)."""
-
     def __init__(
         self,
         ticket_type_repo: Optional[TicketTypeRepo] = None,

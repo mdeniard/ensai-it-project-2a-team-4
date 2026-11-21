@@ -2,7 +2,8 @@ from typing import Optional
 
 
 class TicketType:
-    """A type of ticket (Normal, ENSAI Student...): the base price of the screening is multiplied by price_multiplier."""
+    """A type of ticket (Normal, ENSAI Student...).
+    The base price of the screening is multiplied by price_multiplier."""
 
     def __init__(
         self,

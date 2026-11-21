@@ -7,8 +7,6 @@ from .DBConnector import DBConnector
 
 
 class ScreeningRepo:
-    """Repository that manages the screenings in the database (table screenings)."""
-
     db_connector: DBConnector
 
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:

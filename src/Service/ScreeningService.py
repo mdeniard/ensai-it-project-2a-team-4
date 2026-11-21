@@ -1,20 +1,19 @@
-from datetime import datetime, timedelta
-from typing import Optional
 from datetime import date, datetime, time, timedelta, timezone
+from typing import Optional
 from zoneinfo import ZoneInfo
+
+from src.Business_object.Screening import Screening
+from src.DAO.MovieRepo import MovieRepo
+from src.DAO.ReservationRepo import ReservationRepo
+from src.DAO.RoomRepo import RoomRepo
+from src.DAO.ScreeningRepo import ScreeningRepo
 
 LOCAL_TZ = ZoneInfo("Europe/Paris")
 
-from src.Business_object.Screening import Screening
-from src.DAO.ScreeningRepo import ScreeningRepo
-from src.DAO.MovieRepo import MovieRepo
-from src.DAO.RoomRepo import RoomRepo
-from src.DAO.ReservationRepo import ReservationRepo
+
 
 
 class ScreeningService:
-    """Service that manages screenings (schedule of the rooms and creation by the administrators)."""
-
     def __init__(
         self,
         screening_repo: Optional[ScreeningRepo] = None,

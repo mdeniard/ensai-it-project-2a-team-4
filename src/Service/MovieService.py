@@ -1,13 +1,13 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from src.Business_object.Movie import Movie
 from src.DAO.MovieDBConnector import MovieDBConnector
 from src.DAO.MovieRepo import MovieRepo
 
+if TYPE_CHECKING:
+    from src.Business_object.Movie import Movie
+
 
 class MovieService:
-    """Service that manages movies (our catalogue and the import from TMDB)."""
-
     def __init__(
         self,
         movie_repo: Optional[MovieRepo] = None,

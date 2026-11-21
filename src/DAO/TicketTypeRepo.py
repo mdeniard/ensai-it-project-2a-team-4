@@ -6,8 +6,6 @@ from .DBConnector import DBConnector
 
 
 class TicketTypeRepo:
-    """Repository that manages the tickets in the database (table ticket_types)."""
-
     db_connector: DBConnector
 
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:

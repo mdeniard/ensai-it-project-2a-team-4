@@ -1,5 +1,7 @@
-from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class Screening:

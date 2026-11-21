@@ -2,9 +2,11 @@
 
 import hashlib
 import secrets
+from typing import TYPE_CHECKING
 
-from src.Business_object.User import User
-from src.DAO.UserRepo import UserRepo
+if TYPE_CHECKING:
+    from src.Business_object.User import User
+    from src.DAO.UserRepo import UserRepo
 
 
 def hash_password(password: str, salt="") -> str:

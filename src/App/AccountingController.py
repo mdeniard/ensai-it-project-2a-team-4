@@ -1,13 +1,14 @@
-from typing_extensions import Optional
-from datetime import datetime
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from typing_extensions import Optional
 
 from src.Service.AccountingService import AccountingService
 
 from .UserController import require_admin
 
+if TYPE_CHECKING:
+    from datetime import datetime
 
 admin_accounting_router = APIRouter(
     prefix="/admin/accounting",

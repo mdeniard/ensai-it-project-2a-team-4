@@ -160,15 +160,27 @@ def test_import_from_tmdb_unknown_movie():
     assert movie is None
     assert not movie_repo.create_was_called
 
+
 # ---------- get_screening_movies ----------
 
 
 def test_get_screening_movies_returns_all():
     # GIVEN the database has 2 movies
-    movie_repo = MockMovieRepo([
-        make_wild_robot(movie_id=1),
-        Movie(tmdb_id=2, title="Other", description="x", duration=90, released_date="2020-01-01", rating=7.0, poster_url=None, id=2),
-    ])
+    movie_repo = MockMovieRepo(
+        [
+            make_wild_robot(movie_id=1),
+            Movie(
+                tmdb_id=2,
+                title="Other",
+                description="x",
+                duration=90,
+                released_date="2020-01-01",
+                rating=7.0,
+                poster_url=None,
+                id=2,
+            ),
+        ]
+    )
     movie_service = MovieService(movie_repo, MockMovieDBConnector())
 
     # WHEN we list all movies
@@ -216,7 +228,9 @@ def test_create_movie_ok():
     # GIVEN the admin enters a movie by hand
     movie_repo = MockMovieRepo([])
     movie_service = MovieService(movie_repo, MockMovieDBConnector())
-    new_movie = Movie(tmdb_id=2, title="Other", description="x", duration=90, released_date="2020-01-01", rating=7.0, poster_url=None)
+    new_movie = Movie(
+        tmdb_id=2, title="Other", description="x", duration=90, released_date="2020-01-01", rating=7.0, poster_url=None
+    )
 
     # WHEN the admin saves it
     created = movie_service.create_movie(new_movie)
