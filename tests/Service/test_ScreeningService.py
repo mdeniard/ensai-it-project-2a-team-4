@@ -1,10 +1,13 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from src.Service.ScreeningService import ScreeningService
 
 # These tests use fake repos instead of the database (like in tests/Service/test_ReservationService.py)
+
+# A start time in the future, for the screenings created in the tests
+NEXT_WEEK = datetime.now(timezone.utc) + timedelta(days=7)
 
 # ---------- Fake repos ----------
 
@@ -253,12 +256,10 @@ def test_room_schedule_returns_empty_list():
 
 def test_create_screening_ok():
     # GIVEN movie 10 (120 min) and room 1 exist, and the room is free
-    from datetime import datetime, timezone
-
     screening_repo = MockScreeningRepoFull()
     service = make_full_service(screening_repo)
 
-    start = datetime(2026, 7, 15, 20, 0, tzinfo=timezone.utc)
+    start = NEXT_WEEK
 
     # WHEN the administrator creates a screening
     created = service.create_screening(movie_id=10, room_id=1, start_time=start, base_price=12.5)
@@ -274,12 +275,10 @@ def test_create_screening_ok():
 
 def test_create_screening_base_price_zero():
     # GIVEN a valid movie and room
-    from datetime import datetime, timezone
-
     screening_repo = MockScreeningRepoFull()
     service = make_full_service(screening_repo)
 
-    start = datetime(2026, 7, 15, 20, 0, tzinfo=timezone.utc)
+    start = NEXT_WEEK
 
     # WHEN the base price is 0 / THEN ValueError
     with pytest.raises(ValueError, match="greater than 0"):
@@ -288,26 +287,34 @@ def test_create_screening_base_price_zero():
 
 def test_create_screening_base_price_negative():
     # GIVEN a valid movie and room
-    from datetime import datetime, timezone
-
     screening_repo = MockScreeningRepoFull()
     service = make_full_service(screening_repo)
 
-    start = datetime(2026, 7, 15, 20, 0, tzinfo=timezone.utc)
+    start = NEXT_WEEK
 
     # WHEN the base price is negative / THEN ValueError
     with pytest.raises(ValueError, match="greater than 0"):
         service.create_screening(movie_id=10, room_id=1, start_time=start, base_price=-5)
 
 
+def test_create_screening_in_the_past():
+    # GIVEN a valid movie and room, and a start time yesterday
+    screening_repo = MockScreeningRepoFull()
+    service = make_full_service(screening_repo)
+    yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+
+    # WHEN the administrator creates the screening / THEN ValueError and nothing is saved
+    with pytest.raises(ValueError, match="in the past"):
+        service.create_screening(movie_id=10, room_id=1, start_time=yesterday, base_price=10)
+    assert screening_repo.created_screening is None
+
+
 def test_create_screening_movie_not_found():
     # GIVEN movie 99 does not exist
-    from datetime import datetime, timezone
-
     screening_repo = MockScreeningRepoFull()
     service = make_full_service(screening_repo)
 
-    start = datetime(2026, 7, 15, 20, 0, tzinfo=timezone.utc)
+    start = NEXT_WEEK
 
     # WHEN we create a screening for an unknown movie / THEN LookupError
     with pytest.raises(LookupError, match="Movie"):
@@ -316,12 +323,10 @@ def test_create_screening_movie_not_found():
 
 def test_create_screening_room_not_found():
     # GIVEN room 99 does not exist
-    from datetime import datetime, timezone
-
     screening_repo = MockScreeningRepoFull()
     service = make_full_service(screening_repo)
 
-    start = datetime(2026, 7, 15, 20, 0, tzinfo=timezone.utc)
+    start = NEXT_WEEK
 
     # WHEN we create a screening in an unknown room / THEN LookupError
     with pytest.raises(LookupError, match="Room"):
@@ -330,13 +335,11 @@ def test_create_screening_room_not_found():
 
 def test_create_screening_room_already_booked():
     # GIVEN the room is already booked on this time slot
-    from datetime import datetime, timezone
-
     screening_repo = MockScreeningRepoFull()
     screening_repo._session_available = False
     service = make_full_service(screening_repo)
 
-    start = datetime(2026, 7, 15, 20, 0, tzinfo=timezone.utc)
+    start = NEXT_WEEK
 
     # WHEN we create a screening in that room / THEN ValueError
     with pytest.raises(ValueError, match="already booked"):

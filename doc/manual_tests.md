@@ -50,7 +50,7 @@ Some ids are created during the scenario: write down the value returned by the A
 | `<EVENING>` (screening tomorrow 20:00) | 2.14 | 133 |
 | `<AFTERNOON>` (screening tomorrow 14:00) | 2.16 | 134 |
 
-`<TOMORROW>` means the date of tomorrow, in the format `YYYY-MM-DD`.
+`<TOMORROW>` and `<YESTERDAY>` mean the date of tomorrow and of yesterday, in the format `YYYY-MM-DD`.
 
 ---
 
@@ -94,6 +94,7 @@ Not logged in.
 | 2.14 | `POST /admin/screenings/` | same body with `"base_price": 10` | **201**, `end_time` = 22:48 → write down `<EVENING>` | end time = start + 148 min + 20 min |
 | 2.15 | `POST /admin/screenings/` | same body with `"start_time": "<TOMORROW>T21:00:00"` | **409** "The room is already booked on this time slot" | no overlap in a room |
 | 2.16 | `POST /admin/screenings/` | same body with `"start_time": "<TOMORROW>T14:00:00"`, `"base_price": 8` | **201** → write down `<AFTERNOON>` | a second screening, without any sale |
+| 2.17 | `POST /admin/screenings/` | same body with `"start_time": "<YESTERDAY>T20:00:00"`, `"base_price": 10` | **409** "The screening cannot start in the past" | no screening in the past |
 
 ---
 
@@ -183,8 +184,7 @@ Run them **after** part 6. At the end, reset the demo data again (see "Before yo
 
 ## What this scenario showed us (known limitations)
 
-- **A screening can be created in the past.** With `"start_time": "<YESTERDAY>T10:00:00"`, step 2.14 also answers **201**.
-  It cannot be booked (step 3.5 shows it), but it should be refused when it is created.
+- ~~A screening can be created in the past.~~ Found by this scenario on 20/11/2026, **fixed** on 21/11/2026 (step 2.17).
 - **The error messages of `POST /admin/rooms/` are not clear** (steps 2.8 and 2.9): the right code (400) is returned,
   but the message is the raw PostgreSQL error. A duplicate room number should rather give a 409 with a short message.
 - **Deleting an account also deletes its bookings** (`DELETE /users/me?confirm=true`): the revenue of these tickets

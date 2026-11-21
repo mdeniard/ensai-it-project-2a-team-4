@@ -65,8 +65,8 @@ class ScreeningService:
 
     def create_screening(self, movie_id: int, room_id: int, start_time: datetime, base_price: float) -> Screening:
         """Create a screening. The end time is computed: start time + duration of the movie + 20 minutes.
-        The screening is refused if the base price is not positive, if the movie or the room
-        does not exist, or if the room is already booked during this time slot.
+        The screening is refused if the base price is not positive, if it starts in the past,
+        if the movie or the room does not exist, or if the room is already booked during this time slot.
         Args:
             movie_id (int): The database id of the movie.
             room_id (int): The database id of the room.
@@ -79,6 +79,10 @@ class ScreeningService:
         # The base price of a ticket must be positive
         if base_price <= 0:
             raise ValueError("The base price must be greater than 0")
+
+        # A screening cannot be planned in the past (probably a mistake in the date)
+        if start_time <= datetime.now(timezone.utc):
+            raise ValueError("The screening cannot start in the past")
 
         movie = self.movie_repo.get_by_id(movie_id)
         if not movie:

@@ -56,7 +56,8 @@ def create_screening(
 ):
     """
     Create a screening. The end time is computed by the server: start time + duration of the movie + 20 minutes.
-    Refused (409) if the room is already booked on this time slot or if the base price is not positive.
+    Refused (409) if the screening starts in the past, if the room is already booked on this time slot
+    or if the base price is not positive.
 
     Args:
 
