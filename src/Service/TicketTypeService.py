@@ -1,9 +1,7 @@
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
+from src.Business_object.TicketType import TicketType
 from src.DAO.TicketTypeRepo import TicketTypeRepo
-
-if TYPE_CHECKING:
-    from src.Business_object.TicketType import TicketType
 
 
 class TicketTypeService:

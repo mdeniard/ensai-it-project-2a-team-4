@@ -1,8 +1,6 @@
-from typing import TYPE_CHECKING, Optional
-
-if TYPE_CHECKING:
-    from datetime import datetime
-    from decimal import Decimal
+from datetime import datetime
+from decimal import Decimal
+from typing import Optional
 
 
 class Reservation:

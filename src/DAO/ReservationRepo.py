@@ -1,11 +1,9 @@
-from typing import TYPE_CHECKING, Optional
+from datetime import datetime
+from typing import Optional
 
 from src.Business_object.Reservation import Reservation
 
 from .DBConnector import DBConnector
-
-if TYPE_CHECKING:
-    from datetime import datetime
 
 
 class ReservationRepo:

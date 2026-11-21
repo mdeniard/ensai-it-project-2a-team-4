@@ -1,9 +1,7 @@
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
+from src.Business_object.Room import Room
 from src.DAO.RoomRepo import RoomRepo
-
-if TYPE_CHECKING:
-    from src.Business_object.Room import Room
 
 
 class RoomService:

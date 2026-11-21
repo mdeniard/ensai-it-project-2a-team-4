@@ -1,17 +1,14 @@
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials
 
 from src.Business_object.Reservation import Reservation
+from src.Model.ReservationModel import ReservationModel
 from src.Service.ReservationService import ReservationService
 
 from .JWTBearer import JWTBearer
 from .UserController import get_user_from_credentials
-
-if TYPE_CHECKING:
-    from fastapi.security import HTTPAuthorizationCredentials
-
-    from src.Model.ReservationModel import ReservationModel
 
 reservation_router = APIRouter(prefix="/reservations", tags=["Reservations"])
 

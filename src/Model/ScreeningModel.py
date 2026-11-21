@@ -1,10 +1,7 @@
-from typing import TYPE_CHECKING
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, field_validator
-
-if TYPE_CHECKING:
-    from datetime import datetime
 
 LOCAL_TZ = ZoneInfo("Europe/Paris")
 

@@ -1,11 +1,9 @@
+from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from src.DAO.MovieRepo import MovieRepo
 from src.DAO.ReservationRepo import ReservationRepo
-
-if TYPE_CHECKING:
-    from datetime import datetime
 
 
 class AccountingService:

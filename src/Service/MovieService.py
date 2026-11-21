@@ -1,10 +1,8 @@
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
+from src.Business_object.Movie import Movie
 from src.DAO.MovieDBConnector import MovieDBConnector
 from src.DAO.MovieRepo import MovieRepo
-
-if TYPE_CHECKING:
-    from src.Business_object.Movie import Movie
 
 
 class MovieService:

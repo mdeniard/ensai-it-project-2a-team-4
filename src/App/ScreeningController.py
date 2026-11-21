@@ -1,14 +1,11 @@
-from typing import TYPE_CHECKING, Optional
+from datetime import date
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.App.UserController import require_admin
+from src.Model.ScreeningModel import ScreeningModel
 from src.Service.ScreeningService import ScreeningService
-
-if TYPE_CHECKING:
-    from datetime import date
-
-    from src.Model.ScreeningModel import ScreeningModel
 
 screening_router = APIRouter(prefix="/screenings", tags=["Screenings"])
 
