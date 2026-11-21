@@ -6,6 +6,8 @@ from .DBConnector import DBConnector
 
 
 class UserRepo:
+    """Repository that manages the users in the database (table users)."""
+
     db_connector: DBConnector
 
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:

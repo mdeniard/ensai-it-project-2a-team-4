@@ -6,6 +6,8 @@ from .DBConnector import DBConnector
 
 
 class MovieRepo:
+    """Repository that manages the movies in the database (table movies)."""
+
     db_connector: DBConnector
 
     def __init__(self, db_connector: Optional[DBConnector] = None) -> None:

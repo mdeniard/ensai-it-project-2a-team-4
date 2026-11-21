@@ -5,6 +5,8 @@ from src.DAO.TicketTypeRepo import TicketTypeRepo
 
 
 class TicketTypeService:
+    """Service that manages ticket types (Normal, Child, Student...)."""
+
     def __init__(
         self,
         ticket_type_repo: Optional[TicketTypeRepo] = None,

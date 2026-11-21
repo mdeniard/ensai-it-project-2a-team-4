@@ -6,6 +6,8 @@ from src.DAO.ReviewRepo import ReviewRepo
 
 
 class ReviewService:
+    """Service that manages the reviews of the movies written by the customers."""
+
     def __init__(
         self,
         review_repo: Optional[ReviewRepo] = None,

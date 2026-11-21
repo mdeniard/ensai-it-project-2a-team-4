@@ -5,6 +5,8 @@ from src.DAO.RoomRepo import RoomRepo
 
 
 class RoomService:
+    """Service that manages rooms."""
+
     def __init__(
         self,
         room_repo: Optional[RoomRepo] = None,

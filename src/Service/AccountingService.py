@@ -7,6 +7,8 @@ from src.DAO.ReservationRepo import ReservationRepo
 
 
 class AccountingService:
+    """Service that manages the accounting (revenue and tickets sold) of the movies."""
+
     def __init__(
         self, reservation_repo: Optional[ReservationRepo] = None, movie_repo: Optional[MovieRepo] = None
     ) -> None:

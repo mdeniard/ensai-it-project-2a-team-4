@@ -6,6 +6,8 @@ from src.DAO.MovieRepo import MovieRepo
 
 
 class MovieService:
+    """Service that manages movies (our catalogue and the import from TMDB)."""
+
     def __init__(
         self,
         movie_repo: Optional[MovieRepo] = None,

@@ -10,6 +10,8 @@ from src.DAO.UserRepo import UserRepo
 
 
 class ReservationService:
+    """Service that manages the reservations (booking of tickets and price computation)."""
+
     def __init__(
         self,
         reservation_repo: Optional[ReservationRepo] = None,

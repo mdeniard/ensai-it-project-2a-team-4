@@ -6,6 +6,8 @@ from src.Service.PasswordService import check_password_strength, compare_passwor
 
 
 class UserService:
+    """Service that manages the users (registration, profile and password)."""
+
     def __init__(
         self,
         user_repo: Optional[UserRepo] = None,

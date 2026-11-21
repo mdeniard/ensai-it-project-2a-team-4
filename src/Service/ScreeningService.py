@@ -11,9 +11,9 @@ from src.DAO.ScreeningRepo import ScreeningRepo
 LOCAL_TZ = ZoneInfo("Europe/Paris")
 
 
-
-
 class ScreeningService:
+    """Service that manages screenings (schedule of the rooms and creation by the administrators)."""
+
     def __init__(
         self,
         screening_repo: Optional[ScreeningRepo] = None,
