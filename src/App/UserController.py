@@ -9,8 +9,9 @@ from src.Model.APIUser import APIUser
 from src.Model.JWTResponse import JWTResponse
 from src.Model.UserModel import ChangeUserPasswordModel, UpdateUserModel, UserModel
 from src.Service.PasswordService import UnknownUsernameError, WrongPasswordError, validate_username_password
+from src.Service.UserService import UserService
 
-from .init_app import jwt_service, user_repo, user_service
+from .init_app import jwt_service
 from .JWTBearer import JWTBearer
 
 # ---------- Helpers used by every protected route ----------
@@ -37,7 +38,7 @@ def get_user_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIU
     """
     token = credentials.credentials
     user_id = int(jwt_service.validate_user_jwt(token))
-    user: User | None = user_repo.get_by_id(user_id)
+    user: User | None = UserService().get_user(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return to_api_user(user)
@@ -53,7 +54,7 @@ def get_admin_from_credentials(credentials: HTTPAuthorizationCredentials) -> API
     """
     token = credentials.credentials
     user_id = int(jwt_service.validate_user_jwt(token))
-    user: User | None = user_repo.get_by_id(user_id)
+    user: User | None = UserService().get_user(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if not user.is_admin:
@@ -88,7 +89,7 @@ def create_user(u: UserModel) -> APIUser:
     """
     new_user = User(u.username, u.email, u.password, u.first_name, u.last_name)
     try:
-        user = user_service.create_user(new_user)
+        user = UserService().create_user(new_user)
     except ValueError as error:
         # Password too short
         raise HTTPException(status_code=400, detail=str(error)) from error
@@ -111,7 +112,7 @@ def login(username: str, password: str) -> JWTResponse:
     * password: the password of the account
     """
     try:
-        user = validate_username_password(username, password, user_repo)
+        user = validate_username_password(username, password, UserService().user_repo)
     except UnknownUsernameError as error:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -135,7 +136,7 @@ def list_users() -> list[APIUser]:
     """
     List all the users (administrators only).
     """
-    users = user_service.get_all()
+    users = UserService().get_all()
     return [to_api_user(user) for user in users]
 
 
@@ -160,7 +161,7 @@ def update_own_profile(
     """
     current_user = get_user_from_credentials(credentials)
     try:
-        user = user_service.update_user(
+        user = UserService().update_user(
             user_id=current_user.id,
             username=u.username,
             email=u.email,
@@ -190,7 +191,7 @@ def change_own_password(
     """
     current_user = get_user_from_credentials(credentials)
     try:
-        user_service.change_password(current_user.id, m.old_password, m.new_password)
+        UserService().change_password(current_user.id, m.old_password, m.new_password)
     except PermissionError as error:
         raise HTTPException(status_code=403, detail="Wrong current password") from error
     except ValueError as error:
@@ -218,7 +219,7 @@ def delete_own_profile(
         )
     current_user = get_user_from_credentials(credentials)
     try:
-        is_deleted = user_service.delete_user(current_user.id)
+        is_deleted = UserService().delete_user(current_user.id)
     except LookupError as error:
         raise HTTPException(status_code=404, detail="User not found") from error
     except ValueError as error:
