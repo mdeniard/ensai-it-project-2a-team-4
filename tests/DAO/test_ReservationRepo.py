@@ -127,28 +127,28 @@ def test_create_reservation():
     assert db_connector.last_data["price_paid"] == Decimal("8.00")
 
 
-# ---------- check_room_capacity_reservation ----------
+# ---------- has_available_seat ----------
 
 
-def test_check_room_capacity_free_seats():
+def test_has_available_seat_free_seats():
     # GIVEN a room of 100 seats where 40 tickets were sold
     reservation_repo = ReservationRepo(MockDBConnector({"capacity": 100, "tickets_sold": 40}))
 
     # WHEN we check / THEN there is still room
-    assert reservation_repo.check_room_capacity_reservation(make_reservation()) is True
+    assert reservation_repo.has_available_seat(make_reservation()) is True
 
 
-def test_check_room_capacity_full():
+def test_has_available_seat_full():
     # GIVEN a room of 100 seats where 100 tickets were sold
     reservation_repo = ReservationRepo(MockDBConnector({"capacity": 100, "tickets_sold": 100}))
 
     # WHEN we check / THEN the room is full
-    assert reservation_repo.check_room_capacity_reservation(make_reservation()) is False
+    assert reservation_repo.has_available_seat(make_reservation()) is False
 
 
-def test_check_room_capacity_unknown_screening():
+def test_has_available_seat_unknown_screening():
     # GIVEN the screening does not exist (the query returns no row)
     reservation_repo = ReservationRepo(MockDBConnector(None))
 
     # WHEN we check / THEN we answer False (no seat can be booked)
-    assert reservation_repo.check_room_capacity_reservation(make_reservation()) is False
+    assert reservation_repo.has_available_seat(make_reservation()) is False

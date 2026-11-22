@@ -38,7 +38,7 @@ class TicketTypeRepo:
         raw_ticket_type = self.db_connector.sql_query("SELECT * FROM ticket_types ORDER BY id;", return_type="all")
         return [TicketType(**raw) for raw in raw_ticket_type or []]
 
-    def insert_ticket_type(self, ticket_type: TicketType) -> TicketType:
+    def create_ticket_type(self, ticket_type: TicketType) -> TicketType:
         """Insert a new type of ticket (the id is given by the database).
         Args:
             ticket_type (TicketType): The ticket to create.

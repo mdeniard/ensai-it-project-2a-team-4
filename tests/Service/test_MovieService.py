@@ -27,7 +27,7 @@ class MockMovieRepo:
         self.movies_in_database = movies_in_database
         self.create_was_called = False
 
-    def get_screening_movies(self):
+    def get_all_movies(self):
         return self.movies_in_database
 
     def get_by_id(self, movie_id):
@@ -42,20 +42,20 @@ class MockMovieRepo:
                 return movie
         return None
 
-    def create(self, movie):
+    def create_movie(self, movie):
         self.create_was_called = True
         movie.id = len(self.movies_in_database) + 1
         self.movies_in_database.append(movie)
         return movie
 
-    def update(self, movie):
+    def update_movie(self, movie):
         for i, existing in enumerate(self.movies_in_database):
             if existing.id == movie.id:
                 self.movies_in_database[i] = movie
                 return movie
         return None
 
-    def delete(self, movie_id):
+    def delete_movie(self, movie_id):
         for i, movie in enumerate(self.movies_in_database):
             if movie.id == movie_id:
                 self.movies_in_database.pop(i)
@@ -171,10 +171,10 @@ def test_import_from_tmdb_unknown_movie():
     assert not movie_repo.create_was_called
 
 
-# ---------- get_screening_movies ----------
+# ---------- get_all_movies ----------
 
 
-def test_get_screening_movies_returns_all():
+def test_get_all_movies_returns_all():
     # GIVEN the database has 2 movies
     movie_repo = MockMovieRepo(
         [
@@ -194,18 +194,18 @@ def test_get_screening_movies_returns_all():
     movie_service = MovieService(movie_repo, MockMovieDBConnector())
 
     # WHEN we list all movies
-    result = movie_service.get_screening_movies()
+    result = movie_service.get_all_movies()
 
     # THEN we get them
     assert len(result) == 2
 
 
-def test_get_screening_movies_returns_empty_list():
+def test_get_all_movies_returns_empty_list():
     # GIVEN the database is empty
     movie_service = MovieService(MockMovieRepo([]), MockMovieDBConnector())
 
     # WHEN we list all movies / THEN we get an empty list
-    assert movie_service.get_screening_movies() == []
+    assert movie_service.get_all_movies() == []
 
 
 # ---------- get_by_id ----------

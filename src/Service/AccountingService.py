@@ -76,6 +76,6 @@ class AccountingService:
             and the total_tickets (same content as get_accounting_by_movie).
         """
         if movies is None:
-            movies_list = self.movie_repo.get_screening_movies()
+            movies_list = self.movie_repo.get_all_movies()
             movies = [m.id for m in movies_list]
         return [self.get_accounting_by_movie(m, start_at, end_date) for m in movies]

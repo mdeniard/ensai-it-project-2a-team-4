@@ -30,21 +30,21 @@ class MovieService:
         # Access to the reservations (to protect the sales before a deletion)
         self.reservation_repo = reservation_repo
 
-    def get_screening_movies(self) -> list[Movie]:
+    def get_all_movies(self) -> list[Movie]:
         """List all the movies of our database.
         Returns:
             list[Movie] of all the movies, or an empty list if there is none.
         """
-        return self.movie_repo.get_screening_movies()
+        return self.movie_repo.get_all_movies()
 
-    def get_by_id(self, tmdb_id: int) -> Movie:
+    def get_by_id(self, movie_id: int) -> Movie:
         """Find a movie by its id in our database.
         Args:
-            tmdb_id (int): The database id of the movie. Despite its name, this is not the TMDB id.
+            movie_id (int): The database id of the movie.
         Returns:
             The Movie, or None if no movie has this id.
         """
-        return self.movie_repo.get_by_id(tmdb_id)
+        return self.movie_repo.get_by_id(movie_id)
 
     def create_movie(self, movie):
         """Create a movie from data given by hand (to get it from TMDB, use import_from_tmdb).
@@ -54,7 +54,7 @@ class MovieService:
         Returns:
             The saved Movie, with its id.
         """
-        return self.movie_repo.create(movie)
+        return self.movie_repo.create_movie(movie)
 
     def update_movie(self, movie):
         """Update all the fields of a movie.
@@ -63,7 +63,7 @@ class MovieService:
         Returns:
             The updated Movie, or None if no movie has this id.
         """
-        return self.movie_repo.update(movie)
+        return self.movie_repo.update_movie(movie)
 
     def delete_movie(self, movie_id):
         """Delete a movie that has no ticket sold. Its screenings and its reviews are deleted too.
@@ -82,7 +82,7 @@ class MovieService:
         if tickets_sold > 0:
             raise ValueError(f"{tickets_sold} ticket(s) already sold for this movie, it cannot be deleted")
 
-        return self.movie_repo.delete(movie_id)
+        return self.movie_repo.delete_movie(movie_id)
 
     def search_tmdb(self, title: str, year: Optional[int] = None) -> list[dict]:
         """Search movies on TMDB, so that the administrator can choose which one to import.
@@ -121,4 +121,4 @@ class MovieService:
             return None
 
         # 3. Save the movie in our database and return it (now with its id)
-        return self.movie_repo.create(movie)
+        return self.movie_repo.create_movie(movie)

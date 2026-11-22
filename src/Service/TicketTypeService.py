@@ -84,7 +84,7 @@ class TicketTypeService:
             The saved TicketType, with its id.
         """
         self.check_ticket_type(ticket_type)
-        return self.ticket_type_repo.insert_ticket_type(ticket_type)
+        return self.ticket_type_repo.create_ticket_type(ticket_type)
 
     def update_ticket_type(self, ticket_type: TicketType) -> Optional[TicketType]:
         """Update a ticket type (its name, its price multiplier, or active to stop selling it).

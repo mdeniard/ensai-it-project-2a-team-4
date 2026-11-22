@@ -5,6 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from psycopg2.errors import UniqueViolation
 
 from src.Business_object.User import User
+from src.DAO.UserRepo import UserRepo
 from src.Model.APIUser import APIUser
 from src.Model.JWTResponse import JWTResponse
 from src.Model.UserModel import ChangeUserPasswordModel, UpdateUserModel, UserModel
@@ -112,7 +113,7 @@ def login(username: str, password: str) -> JWTResponse:
     * password: the password of the account
     """
     try:
-        user = validate_username_password(username, password, UserService().user_repo)
+        user = validate_username_password(username, password, UserRepo())
     except UnknownUsernameError as error:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

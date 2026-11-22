@@ -8,7 +8,7 @@ from src.DAO.ReservationRepo import ReservationRepo
 from src.DAO.RoomRepo import RoomRepo
 from src.DAO.ScreeningRepo import ScreeningRepo
 
-LOCAL_TZ = ZoneInfo("Europe/Paris")
+CINEMA_TZ = ZoneInfo("Europe/Paris")
 
 
 class ScreeningService:
@@ -49,7 +49,7 @@ class ScreeningService:
 
         if day is not None:
             # "day" is interpreted in local time, not UTC
-            day_start = datetime.combine(day, time.min, tzinfo=LOCAL_TZ)
+            day_start = datetime.combine(day, time.min, tzinfo=CINEMA_TZ)
             start_from = max(now, day_start)  # never show past screenings
 
         return self.screening_repo.filter_screenings(start_from, movie_id)

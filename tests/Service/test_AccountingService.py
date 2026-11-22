@@ -30,7 +30,7 @@ class MockMovieRepo:
     def get_by_id(self, movie_id):
         return self.movies.get(movie_id)
 
-    def get_screening_movies(self):
+    def get_all_movies(self):
         return list(self.movies.values())
 
 

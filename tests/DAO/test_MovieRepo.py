@@ -75,15 +75,15 @@ def test_get_by_tmdb_id_not_found():
     assert movie_repo.get_by_tmdb_id(999999999) is None
 
 
-# ---------- get_screening_movies ----------
+# ---------- get_all_movies ----------
 
 
-def test_get_screening_movies_several_movies():
+def test_get_all_movies_several_movies():
     # GIVEN the database contains two movies
     movie_repo = MovieRepo(MockDBConnector([WILD_ROBOT_ROW, INCEPTION_ROW]))
 
     # WHEN we list the movies
-    movies = movie_repo.get_screening_movies()
+    movies = movie_repo.get_all_movies()
 
     # THEN we get two Movie objects, in the same order
     assert len(movies) == 2
@@ -91,9 +91,9 @@ def test_get_screening_movies_several_movies():
     assert movies[1].title == "Inception"
 
 
-def test_get_screening_movies_no_movie():
+def test_get_all_movies_no_movie():
     # GIVEN the movies table is empty (PostgreSQL returns an empty list)
     movie_repo = MovieRepo(MockDBConnector([]))
 
     # WHEN we list the movies / THEN we get an empty list
-    assert movie_repo.get_screening_movies() == []
+    assert movie_repo.get_all_movies() == []

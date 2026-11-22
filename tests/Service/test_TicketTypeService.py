@@ -24,7 +24,7 @@ class MockTicketTypeRepo:
     def get_all(self):
         return self.ticket_types
 
-    def insert_ticket_type(self, ticket_type):
+    def create_ticket_type(self, ticket_type):
         ticket_type.id = len(self.ticket_types) + 1
         self.ticket_types.append(ticket_type)
         self.created_ticket_type = ticket_type

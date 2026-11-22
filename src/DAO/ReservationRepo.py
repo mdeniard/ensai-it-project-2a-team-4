@@ -208,7 +208,7 @@ class ReservationRepo:
         )
         return Reservation(**raw)
 
-    def check_room_capacity_reservation(self, reservation: Reservation) -> bool:
+    def has_available_seat(self, reservation: Reservation) -> bool:
         """Check if there is still at least one free seat for the screening of the reservation.
         (one reservation = one ticket = one seat)
         Args:

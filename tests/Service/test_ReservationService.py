@@ -85,7 +85,7 @@ class MockReservationRepo:
         self.room_is_full = room_is_full
         self.saved_reservation = None
 
-    def check_room_capacity_reservation(self, reservation):
+    def has_available_seat(self, reservation):
         # True means "there is still a free seat"
         return not self.room_is_full
 

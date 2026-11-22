@@ -19,35 +19,35 @@ admin_movie_router = APIRouter(
 # ---------- Public routes ----------
 
 
-@movie_router.get("/{tmdb_id}", summary="Get movie by id", status_code=status.HTTP_200_OK)
-def get_movie_by_id(tmdb_id: int):
+@movie_router.get("/{movie_id}", summary="Get movie by id", status_code=status.HTTP_200_OK)
+def get_movie_by_id(movie_id: int):
     """
     Get a movie of the theater database.
 
     Args:
 
-    * tmdb_id: the id of the movie in our database (not the TMDB id)
+    * movie_id: the id of the movie in our database
     """
     try:
-        my_movie = MovieService().get_by_id(tmdb_id)
+        my_movie = MovieService().get_by_id(movie_id)
         return my_movie
     except FileNotFoundError:
         raise HTTPException(
             status_code=404,
-            detail="Movie with id [{}] not found".format(tmdb_id),
+            detail="Movie with id [{}] not found".format(movie_id),
         ) from FileNotFoundError
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid request") from Exception
 
 
-@movie_router.get("/", summary="Get screening movies", status_code=status.HTTP_200_OK)
-def get_screening_movies():
+@movie_router.get("/", summary="Get all movies", status_code=status.HTTP_200_OK)
+def get_all_movies():
     """
     Get all the movies of the theater database.
     """
     try:
-        screening_movies = MovieService().get_screening_movies()
-        return screening_movies
+        movies = MovieService().get_all_movies()
+        return movies
     except FileNotFoundError:
         raise HTTPException(
             status_code=404,

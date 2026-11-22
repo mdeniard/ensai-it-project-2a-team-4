@@ -54,7 +54,7 @@ def get_all_rooms():
 
 
 @admin_room_router.post("/", summary="Create a room", status_code=status.HTTP_201_CREATED)
-def create(
+def create_room(
     r: RoomModel,
 ):
     """

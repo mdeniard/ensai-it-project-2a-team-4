@@ -102,7 +102,7 @@ class ReservationService:
             raise ValueError(f"Ticket type [{ticket_type.name}] is not available")
 
         # Check that room is not full
-        if not self.reservation_repo.check_room_capacity_reservation(reservation):
+        if not self.reservation_repo.has_available_seat(reservation):
             raise ValueError("The screening is full")
 
         # The date of the reservation is set by the server (not by the customer)

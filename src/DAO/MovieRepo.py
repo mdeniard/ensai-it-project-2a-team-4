@@ -42,7 +42,7 @@ class MovieRepo:
             return None
         return Movie(**raw_movie)
 
-    def get_screening_movies(self) -> Optional[Movie]:
+    def get_all_movies(self) -> list[Movie]:
         """Retrieve all the movies of the theater database.
         Returns:
             list[Movie] of all the movies, or an empty list if there is none.
@@ -53,7 +53,7 @@ class MovieRepo:
 
         return [Movie(**movie_data) for movie_data in raw_movies]
 
-    def create(self, movie) -> Movie:
+    def create_movie(self, movie) -> Movie:
         """Save a new movie (the id is given by the database).
         Args:
             movie (Movie): The movie to save (TMDB id, title, description, duration,
@@ -81,7 +81,7 @@ class MovieRepo:
         )
         return Movie(**raw_created_movie)
 
-    def update(self, movie: Movie) -> Optional[Movie]:
+    def update_movie(self, movie: Movie) -> Optional[Movie]:
         """Update all the fields of an existing movie.
         Args:
             movie (Movie): The movie with its new data. Its id identifies the row to update.
@@ -119,7 +119,7 @@ class MovieRepo:
 
         return Movie(**raw_updated_movie)
 
-    def delete(self, movie_id: int) -> bool:
+    def delete_movie(self, movie_id: int) -> bool:
         """Delete a movie. Its screenings, their reservations and its reviews are deleted too (ON DELETE CASCADE).
         Args:
             movie_id (int): The database id of the movie to delete.
