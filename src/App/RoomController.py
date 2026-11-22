@@ -26,16 +26,13 @@ def get_room_by_id(id: int):
 
     * id: the id of the room in our database (not its room number)
     """
-    try:
-        room = RoomService().get_by_id(id)
-        return room
-    except FileNotFoundError as e:
+    room = RoomService().get_by_id(id)
+    if room is None:
         raise HTTPException(
             status_code=404,
-            detail="Room with id [{}] not found".format(id),
-        ) from e
-    except Exception as e:
-        raise HTTPException(status_code=400, detail="Invalid request") from e
+            detail=f"Room with id [{id}] not found",
+        )
+    return room
 
 
 @room_router.get("/", summary="Get all room", status_code=status.HTTP_200_OK)
@@ -101,7 +98,7 @@ def update_room(
     return updated_room
 
 
-# --- Route de Suppression (DELETE) ---
+# ---------- Delete route ----------
 @admin_room_router.delete("/{id}", summary="Delete a room", status_code=status.HTTP_204_NO_CONTENT)
 def delete_room(
     id: int,

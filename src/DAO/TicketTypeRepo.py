@@ -18,30 +18,32 @@ class TicketTypeRepo:
         """
         self.db_connector = db_connector or DBConnector()
 
-    def get_by_id(self, ticket_id: int) -> Optional[TicketType]:
-        """Retrieve a ticket by its database identifier.
+    def get_by_id(self, ticket_type_id: int) -> Optional[TicketType]:
+        """Retrieve a ticket type by its database identifier.
         Args:
-            ticket_id (int): The unique database id of the ticket.
+            ticket_type_id (int): The unique database id of the ticket type.
         Returns:
-            The TicketType object, or None if no ticket has this id.
+            The TicketType object, or None if no ticket type has this id.
         """
-        raw_ticket_type = self.db_connector.sql_query("SELECT * FROM ticket_types WHERE id = %s;", [ticket_id], "one")
+        raw_ticket_type = self.db_connector.sql_query(
+            "SELECT * FROM ticket_types WHERE id = %s;", [ticket_type_id], "one"
+        )
         if raw_ticket_type is None:
             return None
         return TicketType(**raw_ticket_type)
 
     def get_all(self) -> list[TicketType]:
-        """Retrieve the tickets, sorted by id, page by page.
+        """Retrieve all the ticket types, sorted by id.
         Returns:
-            list[TicketType] of the requested page, or an empty list if there is none.
+            list[TicketType] of all the ticket types, or an empty list if there is none.
         """
         raw_ticket_type = self.db_connector.sql_query("SELECT * FROM ticket_types ORDER BY id;", return_type="all")
         return [TicketType(**raw) for raw in raw_ticket_type or []]
 
     def create_ticket_type(self, ticket_type: TicketType) -> TicketType:
-        """Insert a new type of ticket (the id is given by the database).
+        """Create a new ticket type (the id is given by the database).
         Args:
-            ticket_type (TicketType): The ticket to create.
+            ticket_type (TicketType): The ticket type to create.
         Returns:
             The saved TicketType, with its id.
         """
@@ -62,9 +64,9 @@ class TicketTypeRepo:
         return TicketType(**raw)
 
     def update_ticket_type(self, ticket_type: TicketType) -> Optional[TicketType]:
-        """Update all the fields of an existing ticket.
+        """Update all the fields of an existing ticket type.
         Args:
-            ticket_type (TicketType): The ticket with its new data. Its id identifies the row to update,
+            ticket_type (TicketType): The ticket type with its new data. Its id identifies the row to update,
                 so it must be set.
         Returns:
             The updated TicketType.
@@ -93,11 +95,11 @@ class TicketTypeRepo:
         return TicketType(**raw_updated_ticket_type)
 
     def delete_ticket_type(self, ticket_type_id) -> bool:
-        """Delete a type of ticket. Its reservations and reviews are deleted too (ON DELETE CASCADE).
+        """Delete a ticket type. Its reservations and reviews are deleted too (ON DELETE CASCADE).
         Args:
-            ticket_type_id (int): The id of the ticket to delete.
+            ticket_type_id (int): The id of the ticket type to delete.
         Returns:
-            True if a ticket was deleted, False if no ticket has this id.
+            True if a ticket type was deleted, False if no ticket type has this id.
         """
         deleted_ticket_type = self.db_connector.sql_query(
             """

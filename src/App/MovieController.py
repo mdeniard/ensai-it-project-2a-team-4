@@ -28,16 +28,13 @@ def get_movie_by_id(movie_id: int):
 
     * movie_id: the id of the movie in our database
     """
-    try:
-        my_movie = MovieService().get_by_id(movie_id)
-        return my_movie
-    except FileNotFoundError:
+    my_movie = MovieService().get_by_id(movie_id)
+    if my_movie is None:
         raise HTTPException(
             status_code=404,
-            detail="Movie with id [{}] not found".format(movie_id),
-        ) from FileNotFoundError
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid request") from Exception
+            detail=f"Movie with id [{movie_id}] not found",
+        )
+    return my_movie
 
 
 @movie_router.get("/", summary="Get all movies", status_code=status.HTTP_200_OK)
@@ -45,16 +42,7 @@ def get_all_movies():
     """
     Get all the movies of the theater database.
     """
-    try:
-        movies = MovieService().get_all_movies()
-        return movies
-    except FileNotFoundError:
-        raise HTTPException(
-            status_code=404,
-            detail="Movie not found",
-        ) from FileNotFoundError
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid request") from Exception
+    return MovieService().get_all_movies()
 
 
 # ---------- Admin routes ----------
