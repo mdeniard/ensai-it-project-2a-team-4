@@ -6,7 +6,7 @@ Backend API of a movie theater, developed for the 2nd year IT project at ENSAI (
 - **Administrators** import movies from [TMDB](https://www.themoviedb.org/), manage the rooms, plan the screenings and follow the revenue (accounting).
 
 This file explains how to **install, run and use** the application.
-If you want to work on the code, read the developer guide: [src/README.md](src/README.md).
+If you want to work on the code, read the [Developer Guide](#9-developer-guide).
 
 ---
 
@@ -99,7 +99,7 @@ Demo accounts (schema `production` only):
 | `john` | `john_johnson&26` | customer |
 | `mary` | `mary_smith&26` | customer |
 
-You can also create your own customer account with `POST /users/`.
+You can also create your own customer account with `POST /users/`. In a URL, special characters must be encoded: `&` is `%26` and `#` is `%23`.
 
 ### Main routes
 
@@ -139,3 +139,77 @@ It is computed by the server when booking, and stored with the booking.
 ## 8. Team
 
 Imen Boulabiar, Malo Deniard, Anna Olofsson, Céleste Rayzal. Tutor: Clément Valot.
+
+# 9. Developer Guide
+
+## Architecture
+
+The code follows a **layered architecture**: each layer only calls the one directly below it.
+
+```
+Controller  →  Service  →  DAO  →  Database
+ (HTTP)        (rules)    (SQL)    (PostgreSQL)
+```
+
+| Layer | Folder | Responsibility |
+|---|---|---|
+| **Controller** | `src/App/` | Receive HTTP requests, validate the format (Pydantic models), call the service, return a JSON response with the right status code. No business logic here. |
+| **Service** | `src/Service/` | Business rules: computing ticket prices, checking that a room is not full, refusing to delete a movie with tickets sold, importing from TMDB, etc. |
+| **DAO** (Data Access) | `src/DAO/` | Repositories that send SQL queries to PostgreSQL, and the TMDB API connector. No business logic here. |
+| **Business object** | `src/Business_object/` | Plain data classes (Movie, Room, Screening, Reservation, Review, TicketType, User) shared by every layer. |
+| **Model** | `src/Model/` | Pydantic models that describe the request body and the JSON responses. |
+
+**Rules:**
+
+- A Controller never talks to the DAO directly — it goes through a Service.
+- A Service never builds an SQL query — it goes through a DAO (repository).
+- A DAO never contains business rules — it only reads and writes data.
+- A Business object never imports from another layer.
+
+## Development tools
+
+| Command | Description |
+|---|---|
+| `pdm run test` | Run the tests with coverage |
+| `pdm run lint` | Check the code with ruff |
+| `pdm run format` | Format the code with ruff |
+| `pdm run typecheck` | Type checking with pyrefly |
+
+The tests never use the real database or the TMDB API: they use fake connectors and repositories.
+
+## Project structure
+
+```
+.
+├── __main__.py            # Entry point: starts the FastAPI application
+├── pyproject.toml         # Dependencies and tool configuration (ruff, pytest, pyrefly)
+├── sql/                   # Database init scripts (production with demo data, test with empty tables)
+├── src/
+│   ├── App/               # Controllers (FastAPI routes), JWT handling, database reset script
+│   ├── Service/           # Business rules (prices, availability, accounting, import from TMDB...)
+│   ├── DAO/               # Repositories: SQL queries (PostgreSQL) and the TMDB API connector
+│   ├── Business_object/   # Domain classes (Movie, Room, Screening, Reservation, Review, TicketType, User)
+│   └── Model/             # Pydantic models (request bodies and JSON responses)
+└── tests/
+    ├── DAO/               # Tests of the repositories (fake DBConnector)
+    └── Service/           # Tests of the services (fake repositories)
+```
+
+### Tests
+
+- The tests **never use the real database or the TMDB API**: they use fake connectors and repositories (mocks).
+- You can run a single test file or a single test function:
+
+```bash
+pdm run python -m pytest tests/Service/test_MovieService.py -v
+pdm run python -m pytest tests/Service/test_MovieService.py::test_create_movie_ok -v
+```
+
+### Linting and formatting
+
+- **Ruff** is the linter and formatter (configured in `pyproject.toml`).
+- Run `pdm run format` before committing to keep the code consistent.
+
+### Type checking
+
+- **Pyrefly** checks the types at import time. Use the `# pyrefly: ignore` comment only when a type is genuinely unknown at runtime (for example a row read from the database).
