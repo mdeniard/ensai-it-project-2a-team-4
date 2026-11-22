@@ -179,7 +179,8 @@ def delete_movie(
     confirm: bool = False,
 ):
     """
-    Delete a movie, with all its screenings and their reservations.
+    Delete a movie, with its screenings and its reviews.
+    Refused (409) if tickets were already sold for this movie, so that the sales stay in the accounting.
 
     Args:
 
@@ -198,6 +199,9 @@ def delete_movie(
         return {"message": f"Movie with id [{movie_id}] successfully deleted"}
     except HTTPException:
         raise
+    except ValueError as e:
+        # Tickets were already sold for this movie
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error while deleting movie: {str(e)}"

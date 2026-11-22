@@ -72,7 +72,10 @@ Some important business rules:
 
 - **Price paid = base price of the screening × multiplier of the ticket type**, rounded to the cent, computed at booking time and **stored** in `reservations.price_paid` (so a later price change never modifies past sales).
 - A booking is refused if the screening has started, the ticket type is inactive or the room is full.
-- A screening with sold tickets cannot be deleted (it would erase sales from the accounting).
+- A screening, a movie, a room, a ticket type or a customer account with sold tickets cannot be deleted:
+  its reservations would be erased too (`ON DELETE CASCADE`), and the sales would disappear from the accounting.
+  The services check it with the `count_..._reservations` methods of `ReservationRepo`.
+- A screening cannot be created in the past, and a room needs a unique number and at least one seat.
 - A review needs a rating from 1 to 10, a movie the customer has seen (booking on a finished screening), and only one review per customer and movie.
 
 ## 4. Database

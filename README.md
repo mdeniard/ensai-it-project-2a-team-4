@@ -115,6 +115,7 @@ You can also create your own customer account with `POST /users/`.
 | Customer | `GET` / `PUT` / `DELETE /users/me` | see, update or delete my account |
 | Admin | `/admin/movies/...` | search movies on TMDB and import them |
 | Admin | `/admin/rooms/...` | manage the rooms |
+| Admin | `/admin/ticket-types/...` | create, update, deactivate or delete the ticket types (prices) |
 | Admin | `/admin/screenings/...` | plan or delete screenings |
 | Admin | `/admin/accounting/...` | revenue and tickets sold, per movie or per period |
 | Admin | `/admin/users/`, `/admin/reviews/...` | list users, delete any review |

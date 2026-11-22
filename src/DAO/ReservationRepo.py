@@ -61,6 +61,83 @@ class ReservationRepo:
         # pyrefly: ignore
         return raw["tickets_sold"]
 
+    # ---------- Counts used before a deletion ----------
+    # Deleting a movie, a room, a ticket type or a user would also delete its reservations
+    # (ON DELETE CASCADE), so the sales would disappear from the accounting.
+    # The services use these counts to refuse such a deletion.
+
+    def count_tickets(self, query: str, object_id: int) -> int:
+        """Run a query that counts reservations and return the number found.
+        Args:
+            query (str): A SELECT COUNT(*) AS tickets_sold ... query with one %s marker.
+            object_id (int): The value of the %s marker (the id of the movie, room...).
+        Returns:
+            The number of reservations found (0 if there is none).
+        """
+        raw = self.db_connector.sql_query(query, [object_id], "one")
+        if raw is None:
+            return 0
+        # pyrefly: ignore
+        return raw["tickets_sold"]
+
+    def count_movie_reservations(self, movie_id: int) -> int:
+        """Count the tickets sold for all the screenings of a movie.
+        Args:
+            movie_id (int): The database id of the movie.
+        Returns:
+            The number of reservations of the movie (0 if it has none).
+        """
+        return self.count_tickets(
+            """
+            SELECT COUNT(*) AS tickets_sold
+            FROM reservations r
+            JOIN screenings s ON s.id = r.screening_id
+            WHERE s.movie_id = %s;
+            """,
+            movie_id,
+        )
+
+    def count_room_reservations(self, room_id: int) -> int:
+        """Count the tickets sold for all the screenings of a room.
+        Args:
+            room_id (int): The database id of the room.
+        Returns:
+            The number of reservations in the room (0 if it has none).
+        """
+        return self.count_tickets(
+            """
+            SELECT COUNT(*) AS tickets_sold
+            FROM reservations r
+            JOIN screenings s ON s.id = r.screening_id
+            WHERE s.room_id = %s;
+            """,
+            room_id,
+        )
+
+    def count_ticket_type_reservations(self, ticket_type_id: int) -> int:
+        """Count the tickets sold with a ticket type.
+        Args:
+            ticket_type_id (int): The database id of the ticket type.
+        Returns:
+            The number of reservations made with this ticket type (0 if it has none).
+        """
+        return self.count_tickets(
+            "SELECT COUNT(*) AS tickets_sold FROM reservations WHERE ticket_type_id = %s;",
+            ticket_type_id,
+        )
+
+    def count_customer_reservations(self, customer_id: int) -> int:
+        """Count the tickets bought by a customer.
+        Args:
+            customer_id (int): The database id of the customer.
+        Returns:
+            The number of reservations of the customer (0 if they have none).
+        """
+        return self.count_tickets(
+            "SELECT COUNT(*) AS tickets_sold FROM reservations WHERE customer_id = %s;",
+            customer_id,
+        )
+
     def get_accounting_by_movie(
         self, movie_id: int, start_from: Optional[datetime] = None, end_at: Optional[datetime] = None
     ):

@@ -96,6 +96,19 @@ def test_count_screening_reservations():
     assert db_connector.last_data == [3]
 
 
+# ---------- counts used before deleting a movie, a room, a ticket type or a user ----------
+
+
+def test_count_movie_reservations():
+    # GIVEN 7 tickets were sold for the movie
+    db_connector = MockDBConnector({"tickets_sold": 7})
+    reservation_repo = ReservationRepo(db_connector)
+
+    # WHEN we count them / THEN we get 7, and the repo searched with the id of the movie
+    assert reservation_repo.count_movie_reservations(4) == 7
+    assert db_connector.last_data == [4]
+
+
 # ---------- create_reservation ----------
 
 

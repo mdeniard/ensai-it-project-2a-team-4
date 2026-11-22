@@ -1,6 +1,7 @@
 from typing import Optional
 
 from src.Business_object.User import User
+from src.DAO.ReservationRepo import ReservationRepo
 from src.DAO.UserRepo import UserRepo
 from src.Service.PasswordService import check_password_strength, compare_password, create_salt, hash_password
 
@@ -11,13 +12,17 @@ class UserService:
     def __init__(
         self,
         user_repo: Optional[UserRepo] = None,
+        reservation_repo: Optional[ReservationRepo] = None,
     ):
         """Create the service.
         Args:
             user_repo (UserRepo, optional): Access to the users in the database.
                 If none is given, a new UserRepo is created.
+            reservation_repo (ReservationRepo, optional): Access to the reservations, only used before
+                deleting a user. If none is given, a new ReservationRepo is created when it is needed.
         """
         self.user_repo = user_repo or UserRepo()
+        self.reservation_repo = reservation_repo
 
     def get_all(self):
         """List the users of the database.
@@ -91,14 +96,28 @@ class UserService:
         self.user_repo.update_password(user_id, new_hash, new_salt)
 
     def delete_user(self, user_id: int) -> bool:
-        """Delete a user. His reservations and his reviews are deleted too.
+        """Delete a user who has no reservation. Their reviews are deleted too.
+        A user with reservations cannot be deleted: the reservations would be deleted too
+        (ON DELETE CASCADE), so the sales would disappear from the accounting.
         Args:
             user_id (int): The id of the user to delete.
         Returns:
             True if the user was deleted.
+        Raises:
+            LookupError if the user does not exist, ValueError if they have reservations.
         """
         if not self.user_repo.get_by_id(user_id):
-            raise ValueError("User not found")
+            raise LookupError("User not found")
+
+        # Refuse the deletion if the user has bought at least one ticket
+        reservation_repo = self.reservation_repo or ReservationRepo()
+        tickets_bought = reservation_repo.count_customer_reservations(user_id)
+        if tickets_bought > 0:
+            raise ValueError(
+                f"This account has {tickets_bought} reservation(s), it cannot be deleted "
+                "(the sales must stay in the accounting)"
+            )
+
         return self.user_repo.delete_user(user_id)
 
     def get_user(self, user_id: int) -> User | None:

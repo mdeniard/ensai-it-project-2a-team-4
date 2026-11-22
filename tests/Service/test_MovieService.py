@@ -63,6 +63,16 @@ class MockMovieRepo:
         return False
 
 
+class MockReservationRepo:
+    """Fake ReservationRepo: we choose how many tickets were sold for the movie."""
+
+    def __init__(self, tickets_sold=0):
+        self.tickets_sold = tickets_sold
+
+    def count_movie_reservations(self, movie_id):
+        return self.tickets_sold
+
+
 class MockMovieDBConnector:
     """Fake MovieDBConnector: TMDB only knows The Wild Robot."""
 
@@ -273,9 +283,9 @@ def test_update_movie_returns_none_when_not_found():
 
 
 def test_delete_movie_ok():
-    # GIVEN movie 1 exists
+    # GIVEN movie 1 exists and no ticket was sold for it
     movie_repo = MockMovieRepo([make_wild_robot(movie_id=1)])
-    movie_service = MovieService(movie_repo, MockMovieDBConnector())
+    movie_service = MovieService(movie_repo, MockMovieDBConnector(), MockReservationRepo(tickets_sold=0))
 
     # WHEN the admin deletes it
     result = movie_service.delete_movie(1)
@@ -285,10 +295,21 @@ def test_delete_movie_ok():
     assert len(movie_repo.movies_in_database) == 0
 
 
+def test_delete_movie_with_tickets_sold_is_refused():
+    # GIVEN 3 tickets were sold for movie 1
+    movie_repo = MockMovieRepo([make_wild_robot(movie_id=1)])
+    movie_service = MovieService(movie_repo, MockMovieDBConnector(), MockReservationRepo(tickets_sold=3))
+
+    # WHEN the admin deletes it / THEN ValueError and the movie is still there
+    with pytest.raises(ValueError, match="3 ticket"):
+        movie_service.delete_movie(1)
+    assert len(movie_repo.movies_in_database) == 1
+
+
 def test_delete_movie_returns_false_when_not_found():
     # GIVEN movie 99 does not exist
     movie_repo = MockMovieRepo([make_wild_robot(movie_id=1)])
-    movie_service = MovieService(movie_repo, MockMovieDBConnector())
+    movie_service = MovieService(movie_repo, MockMovieDBConnector(), MockReservationRepo())
 
     # WHEN the admin deletes it / THEN we get False
     assert movie_service.delete_movie(99) is False

@@ -85,8 +85,8 @@ Not logged in.
 | 2.5 | `POST /admin/movies/import/1381071` | – | **409** "... already in the catalogue" | *Godzilla Minus Zero* cannot be imported twice |
 | 2.6 | `POST /admin/movies/import/999999999` | – | **404** "... not found on TMDB" | unknown TMDB id |
 | 2.7 | `POST /admin/movies/import/27205` | – | **201**, *Inception*, `duration` 148 → write down `<MOVIE>` | import from TMDB |
-| 2.8 | `POST /admin/rooms/` | `{"room_number": 1, "capacity": 50}` | **400** (room 1 already exists) | the room number is unique |
-| 2.9 | `POST /admin/rooms/` | `{"room_number": 7, "capacity": 0}` | **400** | the capacity must be greater than 0 |
+| 2.8 | `POST /admin/rooms/` | `{"room_number": 1, "capacity": 50}` | **409** "Room number [1] is already used" | the room number is unique |
+| 2.9 | `POST /admin/rooms/` | `{"room_number": 7, "capacity": 0}` | **409** "The capacity must be greater than 0" | a room has at least one seat |
 | 2.10 | `POST /admin/rooms/` | `{"room_number": 7, "capacity": 2}` | **201** → write down `<ROOM>` | a small room, to test a full room later |
 | 2.11 | `POST /admin/screenings/` | `{"movie_id": <MOVIE>, "room_id": <ROOM>, "start_time": "<TOMORROW>T20:00:00", "base_price": 0}` | **409** "The base price must be greater than 0" | positive base price |
 | 2.12 | `POST /admin/screenings/` | same body, **without** `base_price` | **422** "Field required" (`base_price`) | the base price is mandatory |
@@ -128,6 +128,8 @@ Log in again as **admin**.
 | 4.2 | `DELETE /admin/screenings/<EVENING>` | `confirm=true` | **409** "2 ticket(s) already sold for this screening, it cannot be deleted" | the sales are protected |
 | 4.3 | `DELETE /admin/screenings/<AFTERNOON>` | `confirm=true` | **204** | a screening without sale can be deleted |
 | 4.4 | `DELETE /admin/screenings/<AFTERNOON>` | `confirm=true` (again) | **404** "Screening not found" | it does not exist anymore |
+| 4.4b | `DELETE /admin/movies/<MOVIE>` | `confirm=true` | **409** "2 ticket(s) already sold for this movie, it cannot be deleted" | the sales of a movie are protected |
+| 4.4c | `DELETE /admin/rooms/<ROOM>` | `confirm=true` | **409** "2 ticket(s) already sold in this room, it cannot be deleted" | the sales of a room are protected |
 | 4.5 | `GET /admin/accounting/movies/<MOVIE>` | – | **200** `{"total_revenue": 18.0, "total_tickets": 2}` | revenue = 10.00 + 8.00 |
 | 4.6 | `GET /admin/accounting/movies/<MOVIE>/details` | – | **200**, one line per screening; `<EVENING>`: 2 tickets, 18.0 | detail per screening |
 | 4.7 | `GET /admin/accounting/period` | `start_from=2026-12-01T00:00:00`, `end_at=2026-11-01T00:00:00` | **400** "The start date is after the end date" | consistent period |
@@ -160,32 +162,38 @@ Log in again as **Léa**.
 | 6.4 | `POST /users/jwt` | `username=lea`, `password=cinema2026` | **401** "Wrong password" | the old password does not work anymore |
 | 6.5 | `POST /users/jwt` | `username=lea`, `password=newpass2026` | **200** | the new one works |
 | 6.6 | `DELETE /users/me` | **without** `confirm` | **409** "Confirmation required ..." | a deletion must be confirmed |
+| 6.7 | `DELETE /users/me` | `confirm=true` | **409** "This account has 2 reservation(s), it cannot be deleted ..." | the sales of a customer are protected |
 
 ---
 
-## Part 7 – Extra checks (with pgAdmin)
+## Part 7 – The administrator manages the prices (ticket types)
 
-These checks need to change data directly in the database, because there is no API route for it.
-Run them **after** part 6. At the end, reset the demo data again (see "Before you start").
+Run this part **after** part 6. At the end, reset the demo data again (see "Before you start").
 
 | # | Action | Data sent | Expected result | Rule checked |
 |---|---|---|---|---|
 | 7.1 | **Logout**, then `POST /reservations/` | `{"screening_id": <EVENING>, "ticket_type_id": 1}` | **401** "Not authenticated" | you must be logged in to book |
-| 7.2 | pgAdmin: `UPDATE production.ticket_types SET active = FALSE WHERE name = 'Child';` then, logged in as **john**, `POST /reservations/` | `{"screening_id": <EVENING>, "ticket_type_id": 2}` | **409** "Ticket type [Child] is not available" | an inactive ticket type cannot be booked |
-| 7.3 | `GET /ticket-types/` | – | **200**, *Child* is not in the list anymore | only active ticket types are offered |
-| 7.4 | pgAdmin: `UPDATE production.ticket_types SET price_multiplier = 0.6 WHERE name = 'ENSAI Student';` | – | – | the administrator changes a price |
-| 7.5 | pgAdmin: `SELECT id, ticket_type_id, price_paid FROM production.reservations WHERE screening_id = <EVENING>;` | – | Léa's student ticket of step 3.8 is **still 8.00** | a price change never modifies past sales |
-| 7.6 | In `.env`, change one character of `TMDB_API_KEY`, restart the server, log in as **admin**, then `GET /admin/movies/search` | `title=inception` | **400** "Error while searching on TMDB: 401 Client Error ..." | a wrong API key gives a clear error (put the right key back after) |
-
-> Room 7 has only 2 seats and is already full after part 3: to book again in step 7.2, use a screening in another room,
-> or check the 409 message, which is given before the capacity is checked.
+| 7.2 | Log in as **Léa**, then `POST /admin/ticket-types/` | `{"name": "Senior", "price_multiplier": 0.7}` | **403** "Admin privileges required" | only the admin manages the prices |
+| 7.3 | Log in as **admin**, then `POST /admin/ticket-types/` | `{"name": "Free", "price_multiplier": 0}` | **409** "The price multiplier must be greater than 0" | a ticket cannot be free |
+| 7.4 | `POST /admin/ticket-types/` | `{"name": "child", "price_multiplier": 0.5}` | **409** "The ticket type [child] already exists" | the name is unique (whatever the case) |
+| 7.5 | `POST /admin/ticket-types/` | `{"name": "Senior", "price_multiplier": 0.7}` | **201**, new ticket type *Senior* | the admin creates a price |
+| 7.6 | `PUT /admin/ticket-types/3` | `{"name": "ENSAI Student", "price_multiplier": 0.6, "active": true}` | **200**, multiplier 0.6 | the admin changes a price |
+| 7.7 | `GET /reservations/me` as **Léa** | – | the student ticket of step 3.8 is **still 8.0** | a price change never modifies past sales |
+| 7.8 | As **admin**, `PUT /admin/ticket-types/2` | `{"name": "Child", "price_multiplier": 0.6, "active": false}` | **200**, `active` = false | the admin stops selling a price |
+| 7.9 | `GET /ticket-types/` | – | **200**, *Child* is not in the list anymore, *Senior* is | only active ticket types are offered to customers |
+| 7.10 | As **john**, `POST /reservations/` | `{"screening_id": <EVENING>, "ticket_type_id": 2}` | **409** "Ticket type [Child] is not available" | an inactive ticket type cannot be booked |
+| 7.11 | As **admin**, `DELETE /admin/ticket-types/1` | `confirm=true` | **409** "... already sold with this ticket type, it cannot be deleted (set it as not active instead)" | the sales are protected |
+| 7.12 | `DELETE /admin/ticket-types/<id of Senior>` | `confirm=true` | **204** | a ticket type never sold can be deleted |
+| 7.13 | In `.env`, change one character of `TMDB_API_KEY`, restart the server, log in as **admin**, then `GET /admin/movies/search` | `title=inception` | **400** "Error while searching on TMDB: 401 Client Error ..." | a wrong API key gives a clear error (put the right key back after) |
 
 ---
 
 ## What this scenario showed us (known limitations)
 
 - ~~A screening can be created in the past.~~ Found by this scenario on 20/11/2026, **fixed** on 21/11/2026 (step 2.17).
-- **The error messages of `POST /admin/rooms/` are not clear** (steps 2.8 and 2.9): the right code (400) is returned,
-  but the message is the raw PostgreSQL error. A duplicate room number should rather give a 409 with a short message.
-- **Deleting an account also deletes its bookings** (`DELETE /users/me?confirm=true`): the revenue of these tickets
-  would disappear from the accounting. We did not run this last step, so as not to change the figures of part 4.
+- ~~The error messages of `POST /admin/rooms/` were the raw PostgreSQL error.~~ Found by this scenario on 20/11/2026,
+  **fixed** on 21/11/2026: the rules are now checked by `RoomService`, with a clear message (steps 2.8 and 2.9).
+- ~~Deleting a movie, a room, a ticket type or an account also deleted its bookings~~ (ON DELETE CASCADE), so the
+  revenue of these tickets disappeared from the accounting. **Fixed** on 21/11/2026: like a screening, they can only be
+  deleted if no ticket was sold (steps 4.4b, 4.4c and 6.7). A ticket type already sold can be set as not active instead.
+  Consequence: a customer who has booked cannot delete their account.

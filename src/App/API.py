@@ -8,7 +8,7 @@ from .ReservationController import reservation_router
 from .ReviewController import admin_review_router, review_router
 from .RoomController import admin_room_router, room_router
 from .ScreeningController import admin_screening_router, screening_router
-from .TicketTypeController import ticket_type_router
+from .TicketTypeController import admin_ticket_type_router, ticket_type_router
 from .UserController import admin_user_router, user_router
 
 
@@ -52,6 +52,8 @@ def run_app():
     app.include_router(admin_accounting_router)
 
     app.include_router(ticket_type_router)
+
+    app.include_router(admin_ticket_type_router)
 
     @app.get("/", include_in_schema=False)
     async def redirect_to_docs():

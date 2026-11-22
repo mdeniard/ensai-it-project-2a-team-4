@@ -3,6 +3,7 @@ from typing import Optional
 from src.Business_object.Movie import Movie
 from src.DAO.MovieDBConnector import MovieDBConnector
 from src.DAO.MovieRepo import MovieRepo
+from src.DAO.ReservationRepo import ReservationRepo
 
 
 class MovieService:
@@ -12,17 +13,22 @@ class MovieService:
         self,
         movie_repo: Optional[MovieRepo] = None,
         movie_db_connector: Optional[MovieDBConnector] = None,
+        reservation_repo: Optional[ReservationRepo] = None,
     ):
         """Create the service.
         Args:
             movie_repo (MovieRepo, optional): Access to the movies in our database.
             movie_db_connector (MovieDBConnector, optional): Access to the external TMDB API.
                 If one is not given, a new one is created.
+            reservation_repo (ReservationRepo, optional): Access to the reservations, only used before
+                deleting a movie. If none is given, a new ReservationRepo is created when it is needed.
         """
         # Access to our own database (table movie)
         self.movie_repo = movie_repo or MovieRepo()
         # Access to the external TMDB API
         self.movie_db_connector = movie_db_connector or MovieDBConnector()
+        # Access to the reservations (to protect the sales before a deletion)
+        self.reservation_repo = reservation_repo
 
     def get_screening_movies(self) -> list[Movie]:
         """List all the movies of our database.
@@ -60,12 +66,22 @@ class MovieService:
         return self.movie_repo.update(movie)
 
     def delete_movie(self, movie_id):
-        """Delete a movie. Its screenings, their reservations and its reviews are deleted too.
+        """Delete a movie that has no ticket sold. Its screenings and its reviews are deleted too.
+        A movie with tickets sold cannot be deleted: its reservations would be deleted too
+        (ON DELETE CASCADE), so the sales would disappear from the accounting.
         Args:
             movie_id (int): The database id of the movie to delete.
         Returns:
             True if the movie was deleted, False if no movie has this id.
+        Raises:
+            ValueError if tickets were already sold for this movie.
         """
+        # Refuse the deletion if at least one ticket was sold for this movie
+        reservation_repo = self.reservation_repo or ReservationRepo()
+        tickets_sold = reservation_repo.count_movie_reservations(movie_id)
+        if tickets_sold > 0:
+            raise ValueError(f"{tickets_sold} ticket(s) already sold for this movie, it cannot be deleted")
+
         return self.movie_repo.delete(movie_id)
 
     def search_tmdb(self, title: str, year: Optional[int] = None) -> list[dict]:

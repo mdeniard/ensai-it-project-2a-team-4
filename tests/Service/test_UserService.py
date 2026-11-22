@@ -54,6 +54,16 @@ class MockUserRepo:
         return True
 
 
+class MockReservationRepo:
+    """Fake ReservationRepo: we choose how many tickets the user has bought."""
+
+    def __init__(self, tickets_bought=0):
+        self.tickets_bought = tickets_bought
+
+    def count_customer_reservations(self, customer_id):
+        return self.tickets_bought
+
+
 # ---------- get_all ----------
 
 
@@ -237,21 +247,32 @@ def test_change_password_unknown_user():
 
 
 def test_delete_user_ok():
-    # GIVEN alice exists
+    # GIVEN alice exists and has never booked a ticket
     user_repo = MockUserRepo()
-    user_service = UserService(user_repo)
+    user_service = UserService(user_repo, MockReservationRepo(tickets_bought=0))
 
     # WHEN she deletes her account / THEN it is deleted
     assert user_service.delete_user(5) is True
     assert user_repo.deleted_user_id == 5
 
 
+def test_delete_user_with_reservations_is_refused():
+    # GIVEN alice has bought 2 tickets
+    user_repo = MockUserRepo()
+    user_service = UserService(user_repo, MockReservationRepo(tickets_bought=2))
+
+    # WHEN she deletes her account / THEN ValueError and nothing is deleted (the sales stay in the accounting)
+    with pytest.raises(ValueError, match="2 reservation"):
+        user_service.delete_user(5)
+    assert user_repo.deleted_user_id is None
+
+
 def test_delete_user_unknown():
     # GIVEN user 99 does not exist
     user_repo = MockUserRepo()
-    user_service = UserService(user_repo)
+    user_service = UserService(user_repo, MockReservationRepo())
 
-    # WHEN we delete it / THEN ValueError and nothing is deleted
-    with pytest.raises(ValueError):
+    # WHEN we delete it / THEN LookupError and nothing is deleted
+    with pytest.raises(LookupError):
         user_service.delete_user(99)
     assert user_repo.deleted_user_id is None

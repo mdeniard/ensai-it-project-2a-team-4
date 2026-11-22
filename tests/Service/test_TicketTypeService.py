@@ -1,3 +1,5 @@
+import pytest
+
 from src.Business_object.TicketType import TicketType
 from src.Service.TicketTypeService import TicketTypeService
 
@@ -39,6 +41,16 @@ class MockTicketTypeRepo:
                 self.deleted_ticket_type_id = ticket_type_id
                 return True
         return False
+
+
+class MockReservationRepo:
+    """Fake ReservationRepo: we choose how many tickets were sold with the ticket type."""
+
+    def __init__(self, tickets_sold=0):
+        self.tickets_sold = tickets_sold
+
+    def count_ticket_type_reservations(self, ticket_type_id):
+        return self.tickets_sold
 
 
 # ---------- get_by_id ----------
@@ -140,6 +152,39 @@ def test_create_ticket_type_returns_saved():
     assert created.name == "Child"
 
 
+def test_create_ticket_type_multiplier_zero_is_refused():
+    # GIVEN a ticket type with a multiplier of 0 (the ticket would be free)
+    ticket_type_repo = MockTicketTypeRepo()
+    ticket_type_service = TicketTypeService(ticket_type_repo)
+
+    # WHEN the admin creates it / THEN ValueError and nothing is saved
+    with pytest.raises(ValueError, match="greater than 0"):
+        ticket_type_service.create_ticket_type(TicketType("Free", 0, True))
+    assert ticket_type_repo.created_ticket_type is None
+
+
+def test_create_ticket_type_empty_name_is_refused():
+    # GIVEN a ticket type whose name is only spaces
+    ticket_type_repo = MockTicketTypeRepo()
+    ticket_type_service = TicketTypeService(ticket_type_repo)
+
+    # WHEN the admin creates it / THEN ValueError and nothing is saved
+    with pytest.raises(ValueError, match="must not be empty"):
+        ticket_type_service.create_ticket_type(TicketType("   ", 0.7, True))
+    assert ticket_type_repo.created_ticket_type is None
+
+
+def test_create_ticket_type_name_already_used_is_refused():
+    # GIVEN the ticket type "Student" already exists
+    ticket_type_repo = MockTicketTypeRepo([TicketType("Student", 0.7, True, id=1)])
+    ticket_type_service = TicketTypeService(ticket_type_repo)
+
+    # WHEN the admin creates "student" again (other case) / THEN ValueError and nothing is saved
+    with pytest.raises(ValueError, match="already exists"):
+        ticket_type_service.create_ticket_type(TicketType("student", 0.5, True))
+    assert ticket_type_repo.created_ticket_type is None
+
+
 # ---------- update_ticket_type ----------
 
 
@@ -157,13 +202,26 @@ def test_update_ticket_type_returns_updated():
     assert updated.price_multiplier == 0.6
 
 
+def test_update_ticket_type_name_of_another_type_is_refused():
+    # GIVEN "Student" (id 1) and "Normal" (id 2) exist
+    ticket_type_repo = MockTicketTypeRepo(
+        [TicketType("Student", 0.7, True, id=1), TicketType("Normal", 1.0, True, id=2)]
+    )
+    ticket_type_service = TicketTypeService(ticket_type_repo)
+
+    # WHEN the admin renames "Student" into "Normal" / THEN ValueError and nothing is saved
+    with pytest.raises(ValueError, match="already exists"):
+        ticket_type_service.update_ticket_type(TicketType("Normal", 0.7, True, id=1))
+    assert ticket_type_repo.updated_ticket_type is None
+
+
 # ---------- delete_ticket_type ----------
 
 
 def test_delete_ticket_type_ok():
-    # GIVEN ticket type 1 exists
+    # GIVEN ticket type 1 exists and was never sold
     ticket_type_repo = MockTicketTypeRepo([TicketType("Student", 0.7, True, id=1)])
-    ticket_type_service = TicketTypeService(ticket_type_repo)
+    ticket_type_service = TicketTypeService(ticket_type_repo, MockReservationRepo(tickets_sold=0))
 
     # WHEN the admin deletes it
     result = ticket_type_service.delete_ticket_type(1)
@@ -174,10 +232,21 @@ def test_delete_ticket_type_ok():
     assert len(ticket_type_repo.ticket_types) == 0
 
 
+def test_delete_ticket_type_already_sold_is_refused():
+    # GIVEN 5 tickets were sold with ticket type 1
+    ticket_type_repo = MockTicketTypeRepo([TicketType("Student", 0.7, True, id=1)])
+    ticket_type_service = TicketTypeService(ticket_type_repo, MockReservationRepo(tickets_sold=5))
+
+    # WHEN the admin deletes it / THEN ValueError and nothing is deleted
+    with pytest.raises(ValueError, match="not active instead"):
+        ticket_type_service.delete_ticket_type(1)
+    assert ticket_type_repo.deleted_ticket_type_id is None
+
+
 def test_delete_ticket_type_unknown():
     # GIVEN ticket type 99 does not exist
     ticket_type_repo = MockTicketTypeRepo([TicketType("Student", 0.7, True, id=1)])
-    ticket_type_service = TicketTypeService(ticket_type_repo)
+    ticket_type_service = TicketTypeService(ticket_type_repo, MockReservationRepo())
 
     # WHEN the admin deletes it / THEN we get False
     assert ticket_type_service.delete_ticket_type(99) is False

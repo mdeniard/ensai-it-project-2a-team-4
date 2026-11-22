@@ -204,7 +204,8 @@ def delete_own_profile(
     confirm: bool = False,
 ) -> None:
     """
-    Delete the profile of the logged-in user, with all their reservations and reviews.
+    Delete the profile of the logged-in user, with their reviews.
+    Refused (409) if the user has reservations, so that the sales stay in the accounting.
 
     Args:
 
@@ -218,7 +219,10 @@ def delete_own_profile(
     current_user = get_user_from_credentials(credentials)
     try:
         is_deleted = user_service.delete_user(current_user.id)
-    except ValueError as error:
+    except LookupError as error:
         raise HTTPException(status_code=404, detail="User not found") from error
+    except ValueError as error:
+        # The user has reservations
+        raise HTTPException(status_code=409, detail=str(error)) from error
     if not is_deleted:
         raise HTTPException(status_code=404, detail="User not found")
