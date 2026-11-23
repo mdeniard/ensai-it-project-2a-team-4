@@ -37,7 +37,7 @@ class MovieService:
         """
         return self.movie_repo.get_all_movies()
 
-    def get_by_id(self, movie_id: int) -> Movie:
+    def get_by_id(self, movie_id: int) -> Optional[Movie]:
         """Find a movie by its id in our database.
         Args:
             movie_id (int): The database id of the movie.

@@ -40,7 +40,7 @@ class MovieDBConnector:
             so that the administrator can choose the right one. An empty list if there is none.
         """
         # Parameters sent to TMDB: the title, and the year only if it was given
-        params = {"query": title}
+        params: dict[str, object] = {"query": title}
         if year is not None:
             params["year"] = year
 

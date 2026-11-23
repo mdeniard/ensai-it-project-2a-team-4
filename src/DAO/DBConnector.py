@@ -1,5 +1,5 @@
 import os
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -39,7 +39,7 @@ class DBConnector:
         query: str,
         data: Optional[Union[tuple, list, dict]] = None,
         return_type: Union[Literal["one"], Literal["all"]] = "one",
-    ):
+    ) -> Any:
         """Run an SQL query on the configured schema and return its result.
         Each call opens its own connection, and the changes are saved (committed) at the end of the call.
         Args:

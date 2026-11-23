@@ -77,5 +77,7 @@ class AccountingService:
         """
         if movies is None:
             movies_list = self.movie_repo.get_all_movies()
-            movies = [m.id for m in movies_list]
-        return [self.get_accounting_by_movie(m, start_at, end_date) for m in movies]
+            movie_ids: list[int] = [m.id for m in movies_list if m.id is not None]
+        else:
+            movie_ids = movies
+        return [self.get_accounting_by_movie(m, start_at, end_date) for m in movie_ids]

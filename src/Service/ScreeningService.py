@@ -92,6 +92,9 @@ class ScreeningService:
         if not room:
             raise LookupError(f"Room [{room_id}] not found")
 
+        if movie.duration is None:
+            raise ValueError(f"Movie [{movie_id}] has no duration, a screening cannot be planned")
+
         end_time = start_time + timedelta(minutes=movie.duration) + timedelta(minutes=20)
 
         if not self.screening_repo.session_is_available(room_id, start_time, end_time):
