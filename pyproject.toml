@@ -47,13 +47,16 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "B", "I", "A", "C90", "PERF", "TCH", "TID"]
+ignore = ["TC001", "TC002", "TC003", "A002"]
 
 [tool.pyrefly]
 project-includes = ["src/**/*"]
 project-excludes = ['.venv/**/*']
 search_path = [
+
     "."
 ]
+
 
 [dependency-groups]
 test = [
