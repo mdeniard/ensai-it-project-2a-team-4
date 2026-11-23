@@ -108,6 +108,11 @@ CREATE TABLE IF NOT EXISTS screenings (
     CHECK (end_time > start_time)
 );
 
+-- Daily screenings from 1 November to 31 December 2026
+-- Each room has the same slots every day. A movie is only scheduled from its release date on
+-- (Godzilla from 3 November, Ebenezer from 11 November, Hunger Games from 18 November,
+-- Asterix from 2 December, Dune from 15 December, Avengers from 16 December).
+-- The end of a screening (duration + 20 minutes) is always before the next slot of the room.
 INSERT INTO screenings (movie_id, room_id, start_time, end_time, base_price)
 SELECT m.id,
        r.id,
@@ -117,27 +122,34 @@ SELECT m.id,
        -- Base price chosen for the demo: 8.00 before 18:00, 10.00 in the evening
        CASE WHEN t.local_time < TIME '18:00' THEN 8.00 ELSE 10.00 END
 FROM (VALUES
-    -- room_number, tmdb_id, time zone (Paris)
+    -- room_number, tmdb_id, time (Paris)
+    (1, 1170608, TIME '10:30'),  -- Dune: Part Three
     (1, 1381071, TIME '14:00'),  -- Godzilla Minus Zero
     (1, 1437925, TIME '17:00'),  -- Moulin
     (1, 1255833, TIME '20:00'),  -- Whalefall
 
+    (2, 1003596, TIME '10:30'),  -- Avengers: Doomsday
     (2, 1507877, TIME '14:00'),  -- Another Day
     (2, 1263337, TIME '16:45'),  -- Heart of the Beast
     (2, 1381071, TIME '19:30'),  -- Godzilla Minus Zero
 
+    (3, 1300968, TIME '10:30'),  -- The Hunger Games
     (3, 1437925, TIME '15:00'),  -- Moulin
     (3, 1255833, TIME '18:00'),  -- Whalefall
     (3, 1507877, TIME '20:30'),  -- Another Day
 
+    (4, 1567605, TIME '10:30'),  -- Ebenezer
     (4, 1263337, TIME '14:30'),  -- Heart of the Beast
     (4, 1381071, TIME '17:00'),  -- Godzilla Minus Zero
     (4, 1437925, TIME '20:00'),  -- Moulin
 
+    (5, 1084728, TIME '10:30'),  -- Asterix: The Kingdom of Nubia
     (5, 1255833, TIME '16:00'),  -- Whalefall
     (5, 1507877, TIME '18:30'),  -- Another Day
     (5, 1263337, TIME '21:15'),  -- Heart of the Beast
 
+    (6, 1567605, TIME '10:30'),  -- Ebenezer
+    (6, 1084728, TIME '12:45'),  -- Asterix: The Kingdom of Nubia
     (6, 1263337, TIME '15:00'),  -- Heart of the Beast
     (6, 1255833, TIME '17:30'),  -- Whalefall
     (6, 1437925, TIME '20:00')   -- Moulin
@@ -145,15 +157,18 @@ FROM (VALUES
 JOIN rooms  r ON r.room_number = t.room_number
 JOIN movies m ON m.tmdb_id     = t.tmdb_id
 CROSS JOIN (
-    -- 7 days from November 5th
-    SELECT (DATE '2026-11-05' + n) AS day FROM generate_series(0, 6) AS n
+    -- 61 days: 1 November to 31 December
+    SELECT (DATE '2026-11-01' + n) AS day FROM generate_series(0, 60) AS n
 ) d
-WHERE NOT EXISTS (
+WHERE d.day >= m.released_date
+  AND NOT EXISTS (
     SELECT 1 FROM screenings s
     WHERE s.room_id = r.id
       AND s.start_time = (d.day + t.local_time) AT TIME ZONE 'Europe/Paris'
 );
 
+-- Past screenings (29 to 31 October 2026, already over): needed for the demo reviews,
+-- a customer can only review a movie after a screening he booked is over.
 INSERT INTO screenings (movie_id, room_id, start_time, end_time, base_price)
 SELECT m.id,
        r.id,

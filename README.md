@@ -65,7 +65,7 @@ The application uses one PostgreSQL schema, chosen with `POSTGRES_SCHEMA`:
 **Option A – one command (recommended).** It creates the schema written in your `.env`:
 
 ```bash
-pdm run python -m src.App.reset_database
+pdm run python -m src.App.Reset_database
 ```
 
 Type `yes` to confirm.
