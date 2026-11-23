@@ -82,6 +82,8 @@ pdm start
 The API is available on <http://localhost:8000>.
 Open **<http://localhost:8000/docs>** to see and try every route (Swagger interface).
 
+For Onyxia users, you should go to your [Onyxia services](https://datalab.sspcloud.fr/my-services) and click on the **"Open"** button to view links to acces to the API.
+
 ## 6. Use the API
 
 ### Log in
